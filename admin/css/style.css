@@ -1,0 +1,229 @@
+#wpsl-store-overview .widefat td,
+#wpsl-wrap .widefat td {
+    padding:12px 7px;
+}
+
+#wpsl-store-overview .column-action a {
+    float:left;
+    margin-right:5px;
+}
+
+#wpsl-store-overview .widefat td.thumb {
+    padding:6px 0 0 8px;
+}
+
+#wpsl-store-overview .thumb img {
+    border-radius:3px;
+}
+
+#wpsl-store-overview p.search-box {
+    margin:0 0 1em 0;
+}
+
+.column-action { 
+    width:130px;
+}
+#wpsl-delete-confirmation {
+    display:none;
+}
+.wpsl-preloader {
+    float:right;
+    margin:4px 0 0 4px;
+}
+
+/* Plugin nav */
+#wpsl-mainnav {
+    border-bottom: 1px solid #CCCCCC;
+    float: left;
+    margin-bottom: 15px;
+    padding-left: 7px;
+    width: 99.4%;
+}
+#wpsl-mainnav li a {
+    display: block;
+    padding: 9px 12px;
+    text-decoration: none;
+}
+
+#wpsl-mainnav li {
+    float: left;
+    margin: 0;
+}
+
+#wpsl-wrap.wpsl-add-stores label,
+#wpsl-wrap label {
+    width:85px;
+    margin-top:6px;
+}
+
+.wpsl-radioboxes {
+    float:left;
+    margin:5px 0 6px 1px;
+}
+#wpsl-wrap.wpsl-add-stores label {
+    float:left;
+}
+#wpsl-wrap.wpsl-add-stores p {
+    overflow:hidden;
+}
+#wpsl-wrap.wpsl-add-stores .wpsl-radioboxes label {
+    float:none;
+    margin-right:10px;
+} 
+
+#wpsl-wrap em {
+    display:block;
+}
+#wpsl-wrap textarea {
+    width:340px;
+    resize:none;
+}
+
+.wpsl-curve {
+    border-radius:3px;
+}
+
+#wpsl-wrap .wpsl-error {
+    border:1px solid #c01313;
+}
+
+.wpsl-submit-wrap, 
+#wpsl-thumb-wrap div {
+    margin-left:85px;
+}
+#wpsl-lookup-location {
+    margin-bottom:2px;
+}
+
+#wpsl-wrap input[type=text],
+#wpsl-wrap input[type=email],
+#wpsl-wrap input[type=url] {
+    width:340px;
+}
+
+#wpsl-wrap.wpsl-settings input[type=text].textinput {
+    width:255px;
+}
+
+.wpsl-add-store {
+    float:left; 
+    width:100%; 
+    clear:both; 
+}
+
+#wpsl-wrap .metabox-holder {
+    float:left; 
+    margin-right:20px;
+}
+#wpsl-wrap .metabox-holder.wpsl-wide {
+    width:100%;
+    padding-top:0;
+}
+
+#wpsl-wrap .wpsl-edit-header {
+    margin-bottom:12px;
+}
+
+#wpsl-thumb-wrap {
+    width:100%; 
+    overflow:hidden;
+}
+
+#wpsl-thumb-wrap p {
+    margin-top:0;
+}
+
+#wpsl-thumb-wrap div {
+    float:left; 
+    clear:both;
+}
+.wpsl-thumb-placeholder {
+    background: none repeat scroll 0 0 #FFFFFF;
+    border: 1px dashed #CCCCCC;
+    border-radius: 3px 3px 3px 3px;
+    float: left;
+    height: 85px;
+    width: 85px;
+    margin-bottom:10px;
+}
+
+#wpsl-wrap.wpsl-settings .metabox-holder {
+    width:100%;
+}
+#wpsl-wrap.wpsl-settings .metabox-holder h3:hover {
+    cursor: auto;
+}	
+#wpsl-gmap-wrap {
+    float:left; 
+    width:451px; 
+    height:250px;
+    border-radius:3px;
+    margin-top:0;
+    margin-bottom:20px;
+    clear:both;
+}
+
+/* Markers */
+.wpsl-marker-list {
+    overflow:hidden;
+}
+.wpsl-marker-list li {
+    float:left; 
+    padding:10px; 
+    margin-right:5px;
+    text-align:center;
+}
+.wpsl-marker-list li input[type="radio"] {
+    margin-right:0;
+}
+.wpsl-marker-list img {
+    display:block;
+    margin-bottom:7px;
+}
+.wpsl-marker-list li:hover,
+.wpsl-active-marker {
+    background:#E4E4E4; 
+    border-radius:5px;
+    cursor: pointer;
+}
+
+/* Settings page */
+#wpsl-settings-form .postbox-container {
+    width:535px;
+    clear:both;
+}
+#wpsl-wrap .metabox-holder {
+    padding-top:0;
+}
+
+#wpsl-settings-form label {
+    position:relative;
+    display: inline-block;
+    font-weight: normal;
+    margin: 0 10px 0 0;
+    width: 220px;
+}
+	
+#wpsl-save-settings {
+    float:left; 
+    clear:both;
+}	
+#wpsl-settings-form .wpsl_radioboxes label {
+    float:none;
+    margin-right: 10px;
+    width: auto;
+}
+
+#wpsl-faq dt {
+    margin-bottom:4px;
+    font-weight:bold;
+    font-size:110%;
+}
+
+#wpsl-faq dd {
+    margin-left: 0;	
+}
+
+#wpsl-faq dl {
+    margin-bottom: 17px;	
+}

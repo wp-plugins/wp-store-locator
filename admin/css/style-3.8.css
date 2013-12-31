@@ -1,0 +1,29 @@
+@font-face {
+  font-family: 'fontello';
+  src: url('../font/fontello.eot?92013519');
+  src: url('../font/fontello.eot?92013519#iefix') format('embedded-opentype'),
+       url('../font/fontello.woff?92013519') format('woff'),
+       url('../font/fontello.ttf?92013519') format('truetype'),
+       url('../font/fontello.svg?92013519#fontello') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+#adminmenu #toplevel_page_wpsl_store_editor .wp-menu-image:before {
+    content: '\e800';
+    display: inline-block;
+    font-family: "fontello" !important;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 400;
+    line-height: 1em;
+    text-align: center;
+    text-decoration: inherit;
+    text-transform: none;
+    width: 1em;
+}
+
+/* Hide the pre 3.8 menu icon */
+#adminmenu #toplevel_page_wpsl_store_editor .wp-menu-image img {
+    display:none;
+}
