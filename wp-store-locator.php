@@ -5,7 +5,7 @@ Plugin URI:
 Description: An easy to use location management system that enables users to search for nearby physical stores
 Author: Tijmen Smit
 Author URI: http://tijmensmit.com/
-Version: 1.0
+Version: 1.0.1
 Text Domain: wpsl
 Domain Path: /languages/
 License: GPLv3

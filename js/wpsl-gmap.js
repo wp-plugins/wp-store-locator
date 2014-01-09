@@ -1,7 +1,7 @@
 jQuery( document ).ready( function( $ ) { 
 var geocoder, map, infowindow, directionsDisplay, directionsService, 
 	markersArray = [],
-	$selects = $( "select" );
+	$selects = $( "#wpsl-search-wrap select" );
 
 /* Load Google Maps */
 function initializeGmap() {

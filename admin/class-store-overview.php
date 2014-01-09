@@ -317,7 +317,7 @@ class WPSL_Store_Overview extends WP_List_Table {
         }
         
         $response = array(
-            "data"  => $result,
+            "data"  => stripslashes_deep( $result ),
             "count" => $total_items
         );
         

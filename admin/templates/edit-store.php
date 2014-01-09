@@ -11,7 +11,7 @@ if ( $store_id ) {
 }
 ?>
 <div id="wpsl-wrap" class="wrap wpsl-add-stores">
-    <h2 class="wpsl-edit-header">Edit <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['store'] ) ) { echo esc_attr( $_POST['wpsl']['store'] ); } else { echo esc_attr( $store_details['store'] ); } ?></h2>
+    <h2 class="wpsl-edit-header">Edit <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['store'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['store'] ) ); } else { echo esc_attr( stripslashes( $store_details['store'] ) ); } ?></h2>
     <?php settings_errors(); ?>
     
     <form method="post" action="" accept-charset="utf-8">
@@ -33,27 +33,27 @@ if ( $store_id ) {
                         </p>
                         <p>
                             <label for="wpsl-store-name"><?php _e( 'Store Name:', 'wpsl' ); ?></label>
-                            <input id="wpsl-store-name" name="wpsl[store]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['store'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['store'] ) ) { echo esc_attr( $_POST['wpsl']['store'] ); } else { echo esc_attr( $store_details['store'] ); } ?>" />
+                            <input id="wpsl-store-name" name="wpsl[store]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['store'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['store'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['store'] ) ); } else { echo esc_attr( stripslashes( $store_details['store'] ) ); } ?>" />
                         </p>
                         <p>
                             <label for="wpsl-store-street"><?php _e( 'Street:', 'wpsl' ); ?></label>
-                            <input id="wpsl-store-street" name="wpsl[street]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['street'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['street'] ) ) { echo esc_attr( $_POST['wpsl']['street'] ); } else { echo esc_attr( $store_details['street'] ); } ?>" />
+                            <input id="wpsl-store-street" name="wpsl[street]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['street'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['street'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['street'] ) ); } else { echo esc_attr( stripslashes( $store_details['street'] ) ); } ?>" />
                         </p>
                         <p>
                             <label for="wpsl-store-city"><?php _e( 'City:', 'wpsl' ); ?></label>
-                            <input id="wpsl-store-city" name="wpsl[city]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['city'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['city'] ) ) { echo esc_attr( $_POST['wpsl']['city'] ); } else { echo esc_attr( $store_details['city'] ); } ?>" />
+                            <input id="wpsl-store-city" name="wpsl[city]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['city'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['city'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['city'] ) ); } else { echo esc_attr( stripslashes( $store_details['city'] ) ); } ?>" />
                         </p>
                         <p>
                             <label for="wpsl-store-state"><?php _e( 'State / Province:', 'wpsl' ); ?></label>
-                            <input id="wpsl-store-state" name="wpsl[state]" type="text" class="textinput" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['state'] ) ) { echo esc_attr( $_POST['wpsl']['state'] ); } else { echo esc_attr( $store_details['state'] ); } ?>" />
+                            <input id="wpsl-store-state" name="wpsl[state]" type="text" class="textinput" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['state'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['state'] ) ); } else { echo esc_attr( stripslashes( $store_details['state'] ) ); } ?>" />
                         </p>                        
                         <p>
                             <label for="wpsl-store-zip"><?php _e( 'Zip Code:', 'wpsl' ); ?></label>
-                            <input id="wpsl-store-zip" name="wpsl[zip]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['zip'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['zip'] ) ) { echo esc_attr( $_POST['wpsl']['zip'] ); } else { echo esc_attr( $store_details['zip'] ); } ?>" />
+                            <input id="wpsl-store-zip" name="wpsl[zip]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['zip'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['zip'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['zip'] ) ); } else { echo esc_attr( stripslashes( $store_details['zip'] ) ); } ?>" />
                         </p>
                         <p>
                             <label for="wpsl-store-country"><?php _e( 'Country:', 'wpsl' ); ?></label>
-                            <input id="wpsl-store-country" name="wpsl[country]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['country'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['country'] ) ) { echo esc_attr( $_POST['wpsl']['country'] ); } else { echo esc_attr( $store_details['country'] ); } ?>" />
+                            <input id="wpsl-store-country" name="wpsl[country]" type="text" class="textinput <?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['country'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( ( $_POST['wpsl'] ) && empty( $_POST['wpsl']['country'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['country'] ) ); } else { echo esc_attr( stripslashes( $store_details['country'] ) ); } ?>" />
                             <input id="wpsl-country-iso" type="hidden" name="wpsl[country-iso]" value="<?php echo esc_attr( $store_details['country_iso'] ); ?>" />
                         </p>   
                         <p>
@@ -93,15 +93,15 @@ if ( $store_id ) {
                     </p>
                     <p>
                         <label for="wpsl-store-url"><?php _e( 'Url:', 'wpsl' ); ?></label>
-                        <input id="wpsl-store-url" name="wpsl[url]" type="url" class="textinput" value="<?php if ( $_POST['wpsl']['url'] ) { echo esc_attr( $_POST['wpsl']['url'] ); } else { echo esc_attr( $store_details['url'] ); } ?>">
+                        <input id="wpsl-store-url" name="wpsl[url]" type="url" class="textinput" value="<?php if ( $_POST['wpsl']['url'] ) { echo esc_url( $_POST['wpsl']['url'] ); } else { echo esc_url( $store_details['url'] ); } ?>">
                     </p>
                     <p>
                         <label for="wpsl-store-desc"><?php _e( 'Description:', 'wpsl' ); ?></label>
-                        <textarea id="wpsl-store-desc" name="wpsl[desc]" cols="5" rows="5"><?php if ( $_POST['wpsl']['desc'] ) { echo esc_textarea( $_POST['wpsl']['desc'] ); } else { echo esc_textarea( $store_details['description'] ); } ?></textarea>
+                        <textarea id="wpsl-store-desc" name="wpsl[desc]" cols="5" rows="5"><?php if ( $_POST['wpsl']['desc'] ) { echo esc_textarea( stripslashes( $_POST['wpsl']['desc'] ) ); } else { echo esc_textarea( stripslashes( $store_details['description'] ) ); } ?></textarea>
                     </p>
                     <p>
                         <label for="wpsl-store-hours"><?php _e( 'Operation Hours:', 'wpsl' ); ?></label>
-                        <textarea id="wpsl-store-hours" name="wpsl[hours]" cols="5" rows="5"><?php if ( $_POST['wpsl']['hours'] ) { echo esc_textarea( $_POST['wpsl']['hours'] ); } else { echo esc_textarea( $store_details['hours'] ); } ?></textarea>
+                        <textarea id="wpsl-store-hours" name="wpsl[hours]" cols="5" rows="5"><?php if ( $_POST['wpsl']['hours'] ) { echo esc_textarea( stripslashes( $_POST['wpsl']['hours'] ) ); } else { echo esc_textarea( stripslashes( $store_details['hours'] ) ); } ?></textarea>
                     </p>
                     <div id="wpsl-thumb-wrap">
                         <p>

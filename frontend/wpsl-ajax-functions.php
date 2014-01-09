@@ -63,23 +63,23 @@ function wpsl_store_search() {
 
 			/* Sanitize the results before they are returned */
 			$store_results[] = array (
-				'id'          => wp_kses( $result[$k]->wpsl_id, $allowed_html ),
-				'store'       => wp_kses( $result[$k]->store, $allowed_html ),
-				'street'      => wp_kses( $result[$k]->street, $allowed_html ),
-				'city'        => wp_kses( $result[$k]->city, $allowed_html ),
-				'state'       => wp_kses( $result[$k]->state, $allowed_html ),
-				'zip'         => wp_kses( $result[$k]->zip, $allowed_html ),
-				'country'     => wp_kses( $result[$k]->country, $allowed_html ),	
-				'distance'    => wp_kses( $result[$k]->distance, $allowed_html ),
+				'id'          => absint( $result[$k]->wpsl_id ),
+				'store'       => wp_kses( stripslashes( $result[$k]->store ), $allowed_html ),
+				'street'      => wp_kses( stripslashes( $result[$k]->street ), $allowed_html ),
+				'city'        => wp_kses( stripslashes( $result[$k]->city ), $allowed_html ),
+				'state'       => wp_kses( stripslashes( $result[$k]->state ), $allowed_html ),
+				'zip'         => wp_kses( stripslashes( $result[$k]->zip ), $allowed_html ),
+				'country'     => wp_kses( stripslashes( $result[$k]->country ), $allowed_html ),	
+				'distance'    => $result[$k]->distance,
 				'lat'         => wp_kses( $result[$k]->lat, $allowed_html ),
 				'lng'         => wp_kses( $result[$k]->lng, $allowed_html ),
-				'description' => wpautop( wp_kses( $result[$k]->description, $allowed_html ) ),	
-				'phone'       => wp_kses( $result[$k]->phone, $allowed_html ),	
-				'fax'         => wp_kses( $result[$k]->fax, $allowed_html ),
-				'email'       => wp_kses( $result[$k]->email, $allowed_html ),	
-				'hours'       => wpautop( wp_kses( $result[$k]->hours, $allowed_html ) ),
-				'url'         => esc_url( $result[$k]->url, $allowed_html ),
-    			'thumb'       => esc_url( $result[$k]->thumb_src, $allowed_html )	
+				'description' => wpautop( wp_kses( stripslashes( $result[$k]->description ), $allowed_html ) ),	
+				'phone'       => wp_kses( stripslashes( $result[$k]->phone ), $allowed_html ),	
+				'fax'         => wp_kses( stripslashes( $result[$k]->fax ), $allowed_html ),
+				'email'       => wp_kses( stripslashes( $result[$k]->email ), $allowed_html ),	
+				'hours'       => wpautop( wp_kses( stripslashes( $result[$k]->hours ), $allowed_html ) ),
+				'url'         => esc_url( $result[$k]->url ),
+    			'thumb'       => esc_url( $result[$k]->thumb_src )	
 			);
 		}
 
