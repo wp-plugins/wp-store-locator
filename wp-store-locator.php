@@ -32,8 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @version 1.0
 */
 
-//TODO test settings upgrade
-
 if ( !class_exists( 'WP_Store_locator' ) ) {		
 
 	class WP_Store_locator {
