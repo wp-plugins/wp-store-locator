@@ -34,8 +34,10 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
          * @return void
          */
 		public function render_store_locator() {			            
-			require_once( WPSL_PLUGIN_DIR . 'frontend/templates/default.php' );	
+			$output = require_once( WPSL_PLUGIN_DIR . 'frontend/templates/default.php' );	
 			$this->add_frontend_scripts();
+            
+            return $output;
 		}
         
         /**
@@ -126,7 +128,29 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
             
             return $filename;
         }
+        
+        /**
+         * Get the default values for the max_results and the search_radius dropdown
+         *
+         * @since 1.0.2
+         * @return array $output The default dropdown values
+         */
+        public function get_dropdown_defaults() {
+            
+            $required_defaults = array( 
+                "max_results",
+                "search_radius" 
+            );
+            
+            /* Strip out the default values that are wrapped in ( ) */
+            foreach ( $required_defaults as $required_default ) {
+                preg_match_all('/\(([0-9]+?)\)/', $this->settings[$required_default], $match, PREG_PATTERN_ORDER );
+                $output[$required_default] = $match[1][0];
+            }
 
+            return $output;
+        }
+        
         /**
          * Load the front-end scripts and localize the required js data 
          *
@@ -138,11 +162,14 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
             wp_enqueue_script( 'wpsl-dropdown', WPSL_URL.'js/jquery.easydropdown.min.js', array( 'jquery' ) ); //not minified version is in the js folder
 			wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false".$this->get_gmap_api_attributes() ),'' ,'' ,true );
 			wp_enqueue_script( 'wpsl-js', WPSL_URL.'js/wpsl-gmap.js', array( 'jquery' ) );
-
+            
+            $dropdown_defaults = $this->get_dropdown_defaults();
+            
 			$settings = array(
                 'startMarker'     => $this->create_retina_filename( $this->settings['start_marker'] ),
                 'storeMarker'     => $this->create_retina_filename( $this->settings['store_marker'] ),
 				'autoLocate'      => $this->settings['auto_locate'],
+                'autoLoad'        => $this->settings['auto_load'],
 				'mapType'         => $this->settings['map_type'],
 				'zoomLevel' 	  => $this->settings['zoom_level'],
 				'zoomLatlng' 	  => $this->settings['zoom_latlng'],
@@ -151,7 +178,11 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
 				'controlPosition' => $this->settings['control_position'],
 				'controlStyle' 	  => $this->settings['control_style'],
 				'markerBounce' 	  => $this->settings['marker_bounce'],
-				'distanceUnit'    => ucfirst( $this->settings['distance_unit'] ),
+                'newWindow' 	  => $this->settings['new_window'],
+                'resetMap'        => $this->settings['reset_map'],
+                'maxResults'      => $dropdown_defaults['max_results'],
+                'searchRadius'    => $dropdown_defaults['search_radius'],
+				'distanceUnit'    => $this->settings['distance_unit'],
 				'ajaxurl'         => admin_url( 'admin-ajax.php' ),
 				'path'		      => WPSL_URL,
 			);

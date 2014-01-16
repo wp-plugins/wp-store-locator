@@ -2,7 +2,7 @@
 	<h2>WP Store Locator: <?php _e( 'Settings', 'wpsl' ); ?></h2>
     
     <?php global $wpdb; ?>
-    
+
     <?php settings_errors(); ?>
     <ul id="wpsl-mainnav" class="nav-tab-wrapper">
         <li><a class="nav-tab" href="<?php echo admin_url( 'admin.php?page=wpsl_store_editor' ); ?>"><?php _e( 'Current Stores', 'wpsl' ); ?></a></li>
@@ -77,15 +77,19 @@
                         <p>
                            <label for="wpsl-auto-locate"><?php _e( 'Attempt to auto-locate the user:', 'wpsl' ); ?></label> 
                            <input type="checkbox" value="" <?php checked( $this->settings['auto_locate'] == '1', true ); ?> name="wpsl_map[auto_locate]" id="wpsl-auto-locate">
-                        </p>  
+                        </p>
+                        <p>
+                           <label for="wpsl-auto-load"><?php _e( 'Load all stores on page load:', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['auto_load'] == '1', true ); ?> name="wpsl_map[auto_load]" id="wpsl-auto-locate">
+                        </p> 
+                        <p>
+                            <label for="wpsl-zoom-name"><?php _e( 'Start point: *', 'wpsl' ); ?></label> 
+                            <input type="text" value="<?php echo esc_attr( $this->settings['zoom_name'] ); ?>" name="wpsl_map[zoom_name]" class="textinput" id="wpsl-zoom-name">
+                            <input type="hidden" value="<?php echo esc_attr( $this->settings['zoom_latlng'] ); ?>" name="wpsl_map[zoom_latlng]" id="wpsl-latlng" />
+                        </p>
                         <p>
                             <label for="wpsl-zoom-level"><?php _e( 'Zoom level:', 'wpsl' ); ?></label> 
                             <?php echo $this->show_zoom_levels(); ?>
-                        </p>
-                        <p>
-                            <label for="wpsl-zoom-name"><?php _e( 'Default location to focus on:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['zoom_name'] ); ?>" name="wpsl_map[zoom_name]" class="textinput" id="wpsl-zoom-name">
-                            <input type="hidden" value="<?php echo esc_attr( $this->settings['zoom_latlng'] ); ?>" name="wpsl_map[zoom_latlng]" id="wpsl-latlng" />
                         </p>
                         <p>
                             <label for="wpsl-map-type"><?php _e( 'Map type:', 'wpsl' ); ?></label> 
@@ -116,7 +120,8 @@
                                 <input type="radio" value="large" <?php checked( 'large', $this->settings['control_style'], true ); ?> name="wpsl_map[control_style]" id="wpsl-large-style">
                                 <label for="wpsl-large-style"><?php _e( 'Large', 'wpsl' ); ?></label>
                             </span>
-                        </p>                      
+                        </p>
+                        <em><?php _e( '* Required field. If auto-locating the user is disabled or fails, the center of the provided city or country will be used as the initial starting point for the user.', 'wpsl' ); ?></em>
                     </div>        
                 </div>   
             </div>  
@@ -147,6 +152,14 @@
                            <label for="wpsl-design-results"><?php _e( 'Show the limit results dropdown?', 'wpsl' ); ?></label> 
                            <input type="checkbox" value="" <?php checked( $this->settings['results_dropdown'] == '1', true ); ?> name="wpsl_design[design_results]">
                         </p>
+                        <p>
+                           <label for="wpsl-new-window"><?php _e( 'Open links in a new window?', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['new_window'] == '1', true ); ?> name="wpsl_design[new_window]" id="wpsl-new-window">
+                        </p>
+                        <p>
+                           <label for="wpsl-reset-map"><?php _e( 'Show a reset map button?', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['reset_map'] == '1', true ); ?> name="wpsl_design[reset_map]" id="wpsl-reset-map">
+                        </p> 
                         <em><?php _e( '* This is the text that is placed before the search input and radius dropdown', 'wpsl' ); ?></em>
                     </div>        
                 </div>   

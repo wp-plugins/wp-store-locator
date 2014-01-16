@@ -1,45 +1,56 @@
 <?php 
-echo $this->get_custom_css(); 
+$output = $this->get_custom_css(); 
 
 $show_results_filter = $this->settings['results_dropdown'];
 $results_filter_class = ( $show_results_filter ) ? '' : 'wpsl-no-results';
-?>
 
-<div id="wpsl-wrap">
-	<div class="wpsl-search clearfix <?php echo $results_filter_class; ?>">
-		<div id="wpsl-search-wrap">
-            <div class="wpsl-input">
-                <label for="wpsl-search-input"><?php echo esc_attr( $this->settings['search_label'] ); ?></label>
-                <input autocomplete="off" id="wpsl-search-input" type="text" value="" name="wpsl-search-input" />
-            </div>
-            <div class="wpsl-select-wrap">
-                <div id="wpsl-radius">
-                    <label for="wpsl-radius"><?php echo esc_attr( $this->settings['radius_label'] ); ?></label>
-                    <select autocomplete="off" class="wpsl-dropdown" name="wpsl-radius">
-                        <?php echo $this->get_dropdown_list( 'search_radius' ); ?>
-                    </select>
-                </div>
-                <?php if ( $show_results_filter ) { ?>
-                    <div id="wpsl-results">
-                        <label for="wpsl-results"><?php echo esc_attr( $this->settings['results_label'] ); ?></label>
-                        <select autocomplete="off" class="wpsl-dropdown" name="wpsl-results">
-                            <?php echo $this->get_dropdown_list( 'max_results' ); ?>
-                        </select>
-                    </div>
-                <?php } ?>
-                <input id="wpsl-search-btn" type="submit" value="<?php echo esc_attr( $this->settings['search_btn_label'] ); ?>" />
-            </div>    
-        </div> 		
-    </div>
+$output .= '<div id="wpsl-wrap">' . "\r\n";
+$output .= '<div class="wpsl-search clearfix' . $results_filter_class . '">' . "\r\n";
+$output .= '<div id="wpsl-search-wrap">' . "\r\n";
+$output .= '<div class="wpsl-input">' . "\r\n";
+$output .= '<label for="wpsl-search-input">' . esc_attr( $this->settings['search_label'] ) . '</label>' . "\r\n";
+$output .= '<input autocomplete="off" id="wpsl-search-input" type="text" value="" name="wpsl-search-input" />' . "\r\n";
+$output .= '</div>' . "\r\n";
+$output .= '<div class="wpsl-select-wrap">' . "\r\n";
+$output .=      '<div id="wpsl-radius">' . "\r\n";
+$output .=          '<label for="wpsl-radius-label">' . esc_attr( $this->settings['radius_label'] ).'</label>' . "\r\n";
+$output .=          '<select autocomplete="off" id="wpsl-radius-label" class="wpsl-dropdown" name="wpsl-radius">' . "\r\n";
+$output .=              $this->get_dropdown_list( 'search_radius' );
+$output .=          '</select>' . "\r\n";
+$output .=      '</div>' . "\r\n";
+
+if ( $show_results_filter ) {
+    $output .=          '<div id="wpsl-results">' . "\r\n";
+    $output .=              '<label for="wpsl-results-label">' . esc_attr( $this->settings['results_label'] ) . '</label>' . "\r\n";
+    $output .=              '<select autocomplete="off" id="wpsl-results-label" class="wpsl-dropdown" name="wpsl-results">' . "\r\n";
+    $output .=                  $this->get_dropdown_list( 'max_results' );
+    $output .=              '</select>' . "\r\n";
+    $output .=          '</div>' . "\r\n";
+} 
+
+$output .=      '<input id="wpsl-search-btn" type="submit" value='. esc_attr( $this->settings['search_btn_label'] ) . '>' . "\r\n";
+$output .=      '</div>' . "\r\n";
+$output .=   '</div>' . "\r\n";
+$output .= '</div>' . "\r\n";
     
-	<div id="wpsl-result-list">
-		<div id="wpsl-stores">
-			<ul></ul>
-		</div>
-		<div id="wpsl-direction-details">
-			<ul></ul>
-		</div>
-	</div>
-    
-    <div id="wpsl-gmap"></div>
-</div>
+$output .= '<div id="wpsl-result-list">' . "\r\n";
+$output .=      '<div id="wpsl-stores">' . "\r\n";
+$output .=          '<ul></ul>' . "\r\n";
+$output .=      '</div>' . "\r\n";
+$output .=      '<div id="wpsl-direction-details">' . "\r\n";
+$output .=          '<ul></ul>' . "\r\n";
+$output .=      '</div>' . "\r\n";
+$output .= '</div>' . "\r\n";
+
+if ( $this->settings['reset_map'] ) { 
+    $output .= '<div class="wpsl-gmap-wrap">' . "\r\n";
+    $output .= '<div id="wpsl-reset-map">Reset</div>' . "\r\n";
+    $output .= '<div id="wpsl-gmap"></div>' . "\r\n";
+    $output .= '</div>' . "\r\n";
+} else {
+    $output .= '<div id="wpsl-gmap"></div>' . "\r\n";
+}
+
+$output .= '</div>' . "\r\n";
+
+return $output;

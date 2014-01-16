@@ -19,7 +19,7 @@ function wpsl_store_search() {
     $options       = get_option( 'wpsl_settings' );
     $distance_unit = ( $options['distance_unit'] == 'km' ) ? '6371' : '3959'; 
     $allowed_html  = '';
-    
+        
     /* If no max results is set, we get the default value from the settings. 
      * The only situation when it can be empty, is when the "Show the limit results dropdown" 
      * checkbox is unchecked on the settings page.
@@ -30,21 +30,35 @@ function wpsl_store_search() {
         $max_results = $_GET['max_results'];
     }
     
+    /* Check if we need to include the distance and radius limit in the sql query. 
+     * If autoload is enabled we load all stores, so no limits required. 
+     */
+    if ( !$_GET['autoload'] ) {
+        $sql_part = ' HAVING distance < %d ORDER BY distance LIMIT 0, %d';
+        $placeholders = array(
+            $_GET["lat"], 
+            $_GET["lng"], 
+            $_GET["lat"],
+            $_GET["radius"], 
+            $max_results
+        );
+    } else {
+       $sql_part = '';
+       $placeholders = array(
+            $_GET["lat"], 
+            $_GET["lng"], 
+            $_GET["lat"]
+        ); 
+    }
+
     $result = $wpdb->get_results( 
-                    $wpdb->prepare(
-                            "
-                            SELECT *, ( $distance_unit * acos( cos( radians( %s ) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians( %s ) ) + sin( radians( %s ) ) * sin( radians( lat ) ) ) ) 
-                            AS distance FROM $wpdb->wpsl_stores
-                            WHERE active = 1
-                            HAVING distance < %d 
-                            ORDER BY distance LIMIT 0 ,%d
-                            ", 
-                            $_GET['lat'],
-                            $_GET['lng'],
-                            $_GET['lat'],
-                            $_GET['radius'],
-                            $max_results
-                    )
+                    $wpdb->prepare( "
+                                    SELECT *, ( $distance_unit * acos( cos( radians( %s ) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians( %s ) ) + sin( radians( %s ) ) * sin( radians( lat ) ) ) ) 
+                                    AS distance FROM $wpdb->wpsl_stores WHERE active = 1
+                                    $sql_part
+                                    ",
+                                    $placeholders
+                    ) 
                 );
     
     if ( $result === false ) {

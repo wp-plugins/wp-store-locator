@@ -373,6 +373,9 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 				case 'label_missing':
 					$error_msg = __( 'One of the label fields was left empty, the default value for that field has been restored.', 'wpsl' );
 					break;
+                case 'start_point':
+					$error_msg = __( 'Please provide the name of a city or country that can be used as a starting point under "Map Settings". This will only be used if auto-locating the user fails, or the option itself is disabled.', 'wpsl' );
+					break;
 			}
 			
 			add_settings_error ( 'setting-errors', esc_attr( 'settings_fail' ), $error_msg, 'error' );
@@ -440,7 +443,8 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 			
 			/* If no location name is set to zoom to we also empty the latlng values from the hidden input field */
 			if ( empty( $output['zoom_name'] ) ) {
-				$output['zoom_latlng'] = '';
+				$this->settings_error( 'start_point' );
+                $output['zoom_latlng'] = '';
 			} else {
 				$output['zoom_latlng'] = sanitize_text_field( $_POST['wpsl_map']['zoom_latlng'] );
 			}
@@ -451,12 +455,13 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 			} else {
 				$output['map_type'] = $this->get_default_setting( 'map_type' );
 			}
-             
+            
+            $output['auto_locate'] 		= isset( $_POST['wpsl_map']['auto_locate'] ) ? 1 : 0; 
+            $output['auto_load'] 		= isset( $_POST['wpsl_map']['auto_load'] ) ? 1 : 0; 
 			$output['streetview'] 		= isset( $_POST['wpsl_map']['streetview'] ) ? 1 : 0;
             $output['pan_controls'] 	= isset( $_POST['wpsl_map']['pan_controls'] ) ? 1 : 0;	
 			$output['control_position'] = ( $_POST['wpsl_map']['control_position']  == 'left' )  ? 'left' : 'right';	
 			$output['control_style']    = ( $_POST['wpsl_map']['control_style'] == 'small' ) ? 'small' : 'large';
-			$output['auto_locate'] 		= isset( $_POST['wpsl_map']['auto_locate'] ) ? 1 : 0;
             
  			/* Check the height value of the map */
 			if ( absint( $_POST['wpsl_design']['height_value'] ) ) {
@@ -487,7 +492,8 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 			}
 			
             $output['results_dropdown'] = isset( $_POST['wpsl_design']['design_results'] ) ? 1 : 0;          
-            
+            $output['new_window']       = isset( $_POST['wpsl_design']['new_window'] ) ? 1 : 0;	
+            $output['reset_map']        = isset( $_POST['wpsl_design']['reset_map'] ) ? 1 : 0;	
             $output['start_marker'] 	= wp_filter_nohtml_kses( $_POST['wpsl_map']['start_marker'] );
             $output['store_marker'] 	= wp_filter_nohtml_kses( $_POST['wpsl_map']['store_marker'] );
 			

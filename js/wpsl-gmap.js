@@ -1,12 +1,16 @@
 jQuery( document ).ready( function( $ ) { 
-var geocoder, map, infowindow, directionsDisplay, directionsService, 
+var geocoder, map, infowindow, directionsDisplay, directionsService, geolocationLatlng,
 	markersArray = [],
+	mapDefaults = {},
+	resetMap = false,
+	autoLoad = wpslSettings.autoLoad,
 	$selects = $( "#wpsl-search-wrap select" );
 
 /* Load Google Maps */
 function initializeGmap() {
     var myOptions, zoomControlPosition, zoomControlStyle,
 		latLng, zoomTo, zoomLevel, mapType,
+		startMarker = {},
 		streetViewVisible = ( wpslSettings.streetView == 1 ) ? true : false;
 
     /* If no zoom location is defined, we show the entire world */	
@@ -43,25 +47,26 @@ function initializeGmap() {
     /* Set the selected map type */
     switch ( wpslSettings.mapType ) {
 		case "roadmap":
-		  mapType = google.maps.MapTypeId.ROADMAP
-		  break;
+			mapType = google.maps.MapTypeId.ROADMAP
+			break;
 		case "satellite":
-		  mapType = google.maps.MapTypeId.SATELLITE
-		  break;
+			mapType = google.maps.MapTypeId.SATELLITE
+			break;
 		case "hybrid":
-		  mapType = google.maps.MapTypeId.HYBRID
-		  break;
+			mapType = google.maps.MapTypeId.HYBRID
+			break;
 		case "terrain":
-		  mapType = google.maps.MapTypeId.TERRAIN
-		  break;		  
+			mapType = google.maps.MapTypeId.TERRAIN
+			break;		  
 		default:
-		  mapType = google.maps.MapTypeId.ROADMAP
+			mapType = google.maps.MapTypeId.ROADMAP
     }
 
     myOptions = {
 		zoom: zoomLevel,
 		center: zoomTo,
 		mapTypeId: mapType,
+		mapTypeControl: false,
 		panControl: false,
 		streetViewControl: streetViewVisible,
 			zoomControlOptions: {
@@ -75,7 +80,12 @@ function initializeGmap() {
     /* Check if we need to try and autolocate the user */
     if ( wpslSettings.autoLocate == 1 ) {
 		checkGeolocation();
-    }
+    } else {
+		showStores();
+			
+		/* Put the mousecursor in the store search field */
+		$("#wpsl-search-input").focus();
+	}
 	
 	/* Style the dropdown menu */
 	$selects.easyDropDown({
@@ -84,35 +94,127 @@ function initializeGmap() {
 	});
 }
 
-/* Check if Geolocation is supported */
+function showStores() {
+	var latLng = wpslSettings.zoomLatlng.split( ',' ),
+		zoomTo = new google.maps.LatLng( latLng[0], latLng[1] ),
+		startMarker = {
+			store: wpslLabels.startPoint
+		};
+	
+	addMarker( zoomTo, 0, startMarker, true ); // This marker is the 'start location' marker. With a storeId of 0, no name and is draggable
+	findStoreLocations( zoomTo, resetMap, autoLoad );
+}
+
+/* Check if Geolocation detection is supported. If there is an error / timeout with determining the users 
+ * location we use the 'start point' value from the settings as the start location through the showStores function. 
+ */
 function checkGeolocation() {
-    if ( navigator.geolocation ) {
-		navigator.geolocation.getCurrentPosition( handleGeolocationQuery );
-    }
+	if ( navigator.geolocation ) {
+		var locationTimeout = setTimeout( showStores, 3000 );
+
+		navigator.geolocation.getCurrentPosition( function( position ) {
+			clearTimeout( locationTimeout );
+			
+			/* If the timeout is triggerd, and the user later decides to enable the gelocation detection, 
+			 * it gets messy with multiple start markers. So we first clear the map before adding new ones.
+			 */
+			deleteOverlays(); 
+			handleGeolocationQuery( position, resetMap );
+		}, function( error ) {
+			clearTimeout( locationTimeout );
+			showStores();
+		});
+	} else {
+		showStores();
+	}
 };
 
-function handleGeolocationQuery( position ) {  
-    var storeId = 0, 
-		storeName = "", 
-		draggable = true,
-		latLng = new google.maps.LatLng( position.coords.latitude, position.coords.longitude );
+function handleGeolocationQuery( position, resetMap ) {  
 	
-	reverseGeocode( latLng ); //set the zipcode that belongs to the latlng in the input field
-	map.setCenter( latLng );
-	addMarker( latLng, storeId, storeName, draggable );
-	findStoreLocations( latLng );
+	if ( typeof( position ) === "undefined" ) {
+		showStores();
+	 } else {
+		var latLng = new google.maps.LatLng( position.coords.latitude, position.coords.longitude );
+
+		/* Store the latlng from the geolocation for when the user hits "reset" again 
+		 * without having to ask for permission again
+		 */
+		geolocationLatlng = position;
+
+		reverseGeocode( latLng ); // Set the zipcode that belongs to the latlng in the input field
+		map.setCenter( latLng );
+		addMarker( latLng, 0, '', true ); // This marker is the 'start location' marker. With a storeId of 0, no name and is draggable
+		findStoreLocations( latLng, resetMap, autoLoad );
+	}
 };
 
 /* Handle clicks on the search button */
 $( "#wpsl-search-btn" ).on( "click", function() {
-    $( "#wpsl-result-list ul" ).empty();
-    $( "#wpsl-stores" ).show();
-    $( ".wpsl-direction-before, .wpsl-direction-after" ).remove();
-    $( "#wpsl-direction-details" ).hide();
-
-    deleteOverlays();
-    codeAddress();
+	
+	$( "#wpsl-search-input" ).removeClass();
+	
+	if ( !$( "#wpsl-search-input" ).val() ) {
+		$( "#wpsl-search-input" ).addClass( 'wpsl-error' ).focus();
+	} else {
+		$( "#wpsl-result-list ul" ).empty();
+		$( "#wpsl-stores" ).show();
+		$( ".wpsl-direction-before, .wpsl-direction-after" ).remove();
+		$( "#wpsl-direction-details" ).hide();
+		resetMap = false;
+		deleteOverlays();
+		codeAddress();
+	}
 });
+
+/* Reset the map */
+$( "#wpsl-reset-map" ).on( "click", function() {
+	var latLng;
+		resetMap = true;
+	
+	/* When the start marker is dragged the autoload value is set to false. 
+	 * So we need to check the correct value when the reset btn is pushed before reloading the stores. 
+	 */
+	if ( wpslSettings.autoLoad == 1) {
+		autoLoad = 1;
+	}	
+	
+	/* Check if the latlng or zoom has changed since pageload, if so there is something to reset */
+	if ( ( ( ( map.getCenter().lat() !== mapDefaults.centerLatlng.lat() ) || ( map.getCenter().lng() !== mapDefaults.centerLatlng.lng() ) || ( map.getZoom() !== mapDefaults.zoomLevel ) ) ) ) {
+		deleteOverlays();
+		$( "#wpsl-search-input" ).val('').removeClass();
+
+		/* Reset the dropdown values */
+		resetDropdowns();
+
+		if ( wpslSettings.autoLocate == 1 ) {
+			handleGeolocationQuery( geolocationLatlng, resetMap );
+		} else {
+			showStores();
+			$("#wpsl-search-input").focus();
+		}		
+	}
+	
+	$( "#wpsl-stores" ).show();
+    $( "#wpsl-direction-details" ).hide();
+});
+
+/* Reset the dropdown values after the "reset" button is triggerd */
+function resetDropdowns() {
+	var i, arrayLength,
+		defaultValues = [wpslSettings.searchRadius + ' ' + wpslSettings.distanceUnit, wpslSettings.maxResults],
+		dropdowns = ["wpsl-radius", "wpsl-results"];
+	
+	for ( i = 0, arrayLength = dropdowns.length; i < arrayLength; i++ ) {
+	  	$( "#" + dropdowns[i] + " .selected" ).html( defaultValues[i] );
+		$( "#" + dropdowns[i] + " li" ).removeClass();
+
+		$( "#" + dropdowns[i] + " li" ).each( function () {
+			if ( $(this).text() === defaultValues[i] ) {
+				$(this).addClass('active');
+			}
+		});
+	}	
+}
 						
 /* Handle the click on the back button when the route directions are displayed */
 $( "#wpsl-result-list" ).on( "click", ".wpsl-back", function() {	
@@ -247,7 +349,8 @@ function calcRoute( start, end ) {
 
 /* Geocode the user input */ 
 function codeAddress() {
-    var latLng, storeId, storeName, 
+    var latLng, 
+		autoLoad = false,
 		address = $( "#wpsl-search-input" ).val();
 		
     geocoder.geocode( { 'address': address}, function( response, status ) {
@@ -256,10 +359,10 @@ function codeAddress() {
 			
 			/* Remove any previous markers and add a new one */
 			deleteOverlays();
-			addMarker( latLng, storeId = 0, storeName = "", draggable = true );
+			addMarker( latLng, 0, '', true ); // This marker is the 'start location' marker. With a storeId of 0, no name and is draggable
 
 			/* Try to find stores that match the radius, location criteria */
-			findStoreLocations( latLng );
+			findStoreLocations( latLng, resetMap, autoLoad );
 		} else {
 			geocodeNotification( status );
 		}
@@ -292,7 +395,7 @@ function filterApiResponse( response ) {
     for ( i = 0; i < addressLength; i++ ){
 		responseType = response[0].address_components[i].types;
 
-		/* filter out the postcode */
+		/* filter out the postal code */
 		if ( ( /^postal_code$/.test( responseType ) ) || ( /^postal_code_prefix,postal_code$/.test( responseType ) ) ) {
 			zipcode = response[0].address_components[i].long_name;
 		}
@@ -301,7 +404,7 @@ function filterApiResponse( response ) {
     return zipcode;
 }
 
-function findStoreLocations( startLatLng ) {		
+function findStoreLocations( startLatLng, resetMap, autoLoad ) {		
     var location,
 		center = map.getCenter(),
 		infoWindowData = {},
@@ -312,11 +415,26 @@ function findStoreLocations( startLatLng ) {
 		ajaxData = {
 			action: "store_search",
 			lat: startLatLng.lat(),
-			lng: startLatLng.lng(),
-			max_results: $( "#wpsl-results select" ).val(),
-			radius: $( "#wpsl-radius select" ).val()
+			lng: startLatLng.lng()
 		};
-	
+			
+	/* 
+	 * If we reset the map we use the default dropdown
+	 * values instead of the selected values
+	 */
+	if ( resetMap ) {
+		ajaxData.max_results = wpslSettings.maxResults;
+		ajaxData.radius = wpslSettings.searchRadius;
+	} else {
+		ajaxData.max_results = $( "#wpsl-results select" ).val();
+		ajaxData.radius = $( "#wpsl-radius select" ).val();
+	}
+
+	/* Check if autoload all stores is enabled */
+	if ( autoLoad == 1 ) {
+		ajaxData.autoload = 1 ;
+	}
+		
 	/* Add the preloader */
 	$storeList.empty().append( "<li class='wpsl-preloader'><img src='" + preloader + "'/><span>" + wpslLabels.preloader + "</span></li>" );
 		
@@ -345,9 +463,10 @@ function findStoreLocations( startLatLng ) {
 
 					location = new google.maps.LatLng( response[index].lat, response[index].lng );	
 					addMarker( location, response[index].id, infoWindowData, draggable );	
-					storeData = storeData + storeHtml( response[index] );					
+					storeData = storeData + storeHtml( response[index] );	
+					$("#wpsl-reset-map").show();					
 				});
-				
+
 				$( "#wpsl-result-list" ).off( "click", ".wpsl-directions" );
 				$storeList.append( storeData );
 				
@@ -364,6 +483,21 @@ function findStoreLocations( startLatLng ) {
 	    } else {
 			alert( wpslLabels.generalError );
 	    }
+		
+		/* If a reset button exists, store the default zoom and latlng values. 
+		 * This way when a user clicks the reset button we can check if the zoom/latlng values have changed, 
+		 * and if we actually have to reload the map.
+		 * 
+		 */
+		if ( $("#wpsl-reset-map").length > 0 ) {
+			if ( $.isEmptyObject( mapDefaults ) ) {
+				mapDefaults = {
+					centerLatlng : map.getCenter(),
+					zoomLevel : map.getZoom()
+				};	
+			}
+		}
+		
 	});
 }
 
@@ -401,11 +535,9 @@ function addMarker( location, storeId, infoWindowData, draggable ) {
 			infoWindowContent = createInfoWindowHtml( infoWindowData, storeId );
 			infowindow.setContent( infoWindowContent );
 		} else {
-			infowindow.setContent( wpslLabels.startPoint ); //setting van maken
+			infowindow.setContent( wpslLabels.startPoint );
 		}	
 		infowindow.open( map, marker );
-		
-		//pixelOffset: new google.maps.Size(0, 60)
 		
 		$( ".wpsl-info-window" ).on( "click", ".wpsl-directions", function() {	
 			renderDirections( $(this) );
@@ -418,21 +550,27 @@ function addMarker( location, storeId, infoWindowData, draggable ) {
 	
 	if ( draggable ) {
 		google.maps.event.addListener( marker, "dragend", function( event ) { 
+			//deleteOverlays();
 			map.setCenter( event.latLng );
 			reverseGeocode( event.latLng );
-			findStoreLocations( event.latLng );
+			findStoreLocations( event.latLng, resetMap, autoLoad = false );
 		}); 
     }
 }
 
 /* Create the data for the infowindows on Google Maps */
 function createInfoWindowHtml( infoWindowData, storeId ) {
-    var storeHeader,
+    var storeHeader, 
+		newWindow = '',
 		windowContent = "<div data-store-id='" + storeId + "' class='wpsl-info-window'>";
     
     /* Check if we need to turn the store name into a link or not */
     if ( ( typeof( infoWindowData.url ) !== "undefined" ) && ( infoWindowData.url !== "" ) ) {
-		storeHeader = "<a href='" + infoWindowData.url + "'><strong>" + infoWindowData.store + "</strong></a>";
+		if ( wpslSettings.newWindow == 1 ) {
+			newWindow = "target='_blank'";
+		}
+		
+		storeHeader = "<a " + newWindow + " href='" + infoWindowData.url + "'><strong>" + infoWindowData.store + "</strong></a>";
     } else {
 		storeHeader = "<strong>" + infoWindowData.store + "</strong>";
     }
@@ -509,6 +647,7 @@ function fitBounds() {
 
 /* Remove all existing markers and route lines from the map */
 function deleteOverlays() {
+	var markerLen, i;
     directionsDisplay.setMap( null );
 
     /* Remove all the markers from the map, and empty the array */

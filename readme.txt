@@ -3,7 +3,7 @@ Contributors: tijmensmit
 Tags: google maps, store locator, business locations, geocoding, stores, geo
 Requires at least: 3.5
 Tested up to: 3.8
-Stable tag: 1.0.1
+Stable tag: 1.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -55,8 +55,14 @@ Add this shortcode [wpsl] to the page where you want to display the store locato
 
 == Changelog ==
 
+= 1.1 =
+* Added the option to open a link in a new window
+* Added the option to show a reset button that will reset the map back to how it was on page load
+* Added the option to load all stores on page load
+* Fixed a problem with the shortcode output
+
 = 1.0.1 =
-* Fixed the styling for the storelocator dropdowns being applied to other dropdowns site wide
+* Fixed the styling for the store locator dropdowns being applied site wide
 * Fixed a problem with slashes in store titles
 
 = 1.0 =

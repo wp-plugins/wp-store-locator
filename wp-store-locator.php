@@ -5,7 +5,7 @@ Plugin URI:
 Description: An easy to use location management system that enables users to search for nearby physical stores
 Author: Tijmen Smit
 Author URI: http://tijmensmit.com/
-Version: 1.0.1
+Version: 1.1
 Text Domain: wpsl
 Domain Path: /languages/
 License: GPLv3
@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @version 1.0
 */
 
+//TODO test settings upgrade
+
 if ( !class_exists( 'WP_Store_locator' ) ) {		
 
 	class WP_Store_locator {
@@ -57,6 +59,7 @@ if ( !class_exists( 'WP_Store_locator' ) ) {
             'search_radius'    => '10,25,(50),100,200,500',
             'marker_bounce'    => '1',
             'auto_locate' 	   => '1',
+            'auto_load'        => '1',
             'zoom_level' 	   => '3',
             'zoom_name' 	   => '',
             'zoom_latlng' 	   => '',
@@ -70,6 +73,8 @@ if ( !class_exists( 'WP_Store_locator' ) ) {
             'label_width'      => '95',
             'control_position' => 'left',
             'control_style'    => 'small',
+            'new_window'       => '0',
+            'reset_option'     => '0',
             'start_marker'     => 'red.png',
             'store_marker'     => 'blue.png',
             'start_label'      => 'Start location',
