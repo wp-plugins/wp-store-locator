@@ -18,7 +18,6 @@ function wpsl_store_search() {
 
     $options       = get_option( 'wpsl_settings' );
     $distance_unit = ( $options['distance_unit'] == 'km' ) ? '6371' : '3959'; 
-    $allowed_html  = '';
         
     /* If no max results is set, we get the default value from the settings. 
      * The only situation when it can be empty, is when the "Show the limit results dropdown" 
@@ -43,7 +42,7 @@ function wpsl_store_search() {
             $max_results
         );
     } else {
-       $sql_part = '';
+       $sql_part = ' ORDER BY distance';
        $placeholders = array(
             $_GET["lat"], 
             $_GET["lng"], 
@@ -78,20 +77,20 @@ function wpsl_store_search() {
 			/* Sanitize the results before they are returned */
 			$store_results[] = array (
 				'id'          => absint( $result[$k]->wpsl_id ),
-				'store'       => wp_kses( stripslashes( $result[$k]->store ), $allowed_html ),
-				'street'      => wp_kses( stripslashes( $result[$k]->street ), $allowed_html ),
-				'city'        => wp_kses( stripslashes( $result[$k]->city ), $allowed_html ),
-				'state'       => wp_kses( stripslashes( $result[$k]->state ), $allowed_html ),
-				'zip'         => wp_kses( stripslashes( $result[$k]->zip ), $allowed_html ),
-				'country'     => wp_kses( stripslashes( $result[$k]->country ), $allowed_html ),	
+				'store'       => sanitize_text_field( stripslashes( $result[$k]->store ) ),
+				'street'      => sanitize_text_field( stripslashes( $result[$k]->street ) ),
+				'city'        => sanitize_text_field( stripslashes( $result[$k]->city ) ),
+				'state'       => sanitize_text_field( stripslashes( $result[$k]->state ) ),
+				'zip'         => sanitize_text_field( stripslashes( $result[$k]->zip ) ),
+				'country'     => sanitize_text_field( stripslashes( $result[$k]->country ) ),	
 				'distance'    => $result[$k]->distance,
-				'lat'         => wp_kses( $result[$k]->lat, $allowed_html ),
-				'lng'         => wp_kses( $result[$k]->lng, $allowed_html ),
-				'description' => wpautop( wp_kses( stripslashes( $result[$k]->description ), $allowed_html ) ),	
-				'phone'       => wp_kses( stripslashes( $result[$k]->phone ), $allowed_html ),	
-				'fax'         => wp_kses( stripslashes( $result[$k]->fax ), $allowed_html ),
-				'email'       => wp_kses( stripslashes( $result[$k]->email ), $allowed_html ),	
-				'hours'       => wpautop( wp_kses( stripslashes( $result[$k]->hours ), $allowed_html ) ),
+				'lat'         => $result[$k]->lat,
+				'lng'         => $result[$k]->lng,
+				'description' => wpautop( strip_tags( stripslashes( $result[$k]->description ) ) ),	
+				'phone'       => sanitize_text_field( stripslashes( $result[$k]->phone ) ),	
+				'fax'         => sanitize_text_field( stripslashes( $result[$k]->fax ) ),
+				'email'       => sanitize_email( $result[$k]->email ),	
+				'hours'       => wpautop( strip_tags( stripslashes( $result[$k]->hours ) ) ),
 				'url'         => esc_url( $result[$k]->url ),
     			'thumb'       => esc_url( $result[$k]->thumb_src )	
 			);

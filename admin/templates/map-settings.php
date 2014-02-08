@@ -160,6 +160,14 @@
                            <label for="wpsl-reset-map"><?php _e( 'Show a reset map button?', 'wpsl' ); ?></label> 
                            <input type="checkbox" value="" <?php checked( $this->settings['reset_map'] == '1', true ); ?> name="wpsl_design[reset_map]" id="wpsl-reset-map">
                         </p> 
+                        <p>
+                           <label for="wpsl-store-below"><?php _e( 'Show the store listings below the map?', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['store_below'] == '1', true ); ?> name="wpsl_design[store_below]" id="wpsl-store-below">
+                        </p>
+                        <p>
+                           <label for="wpsl-direction-redirect"><?php _e( 'When a user clicks on "Directions", open a new window and show the route on maps.google.com', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['direction_redirect'] == '1', true ); ?> name="wpsl_design[direction_redirect]" id="wpsl-direction-redirect">
+                        </p> 
                         <em><?php _e( '* This is the text that is placed before the search input and radius dropdown', 'wpsl' ); ?></em>
                     </div>        
                 </div>   
@@ -184,55 +192,55 @@
                     <div class="inside">
                         <p>
                             <label for="wpsl-search"><?php _e( 'Your location:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['search_label'] ); ?>" name="wpsl_label[search]" class="textinput" id="wpsl-search">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['search_label'] ) ); ?>" name="wpsl_label[search]" class="textinput" id="wpsl-search">
                         </p>
                         <p>
                             <label for="wpsl-search-radius"><?php _e( 'Search radius:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['radius_label'] ); ?>" name="wpsl_label[radius]" class="textinput" id="wpsl-search-radius">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['radius_label'] ) ); ?>" name="wpsl_label[radius]" class="textinput" id="wpsl-search-radius">
                         </p>
                         <p>
                             <label for="wpsl-no-results"><?php _e( 'No results found:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['no_results_label'] ); ?>" name="wpsl_label[no_results]" class="textinput" id="wpsl-no-results">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['no_results_label'] ) ); ?>" name="wpsl_label[no_results]" class="textinput" id="wpsl-no-results">
                         </p>
                         <p>
                             <label for="wpsl-search-btn"><?php _e( 'Search:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['search_btn_label'] ); ?>" name="wpsl_label[search_btn]" class="textinput" id="wpsl-search-btn">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['search_btn_label'] ) ); ?>" name="wpsl_label[search_btn]" class="textinput" id="wpsl-search-btn">
                         </p>
                         <p>
                             <label for="wpsl-preloader"><?php _e( 'Searching (preloader text):', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['preloader_label'] ); ?>" name="wpsl_label[preloader]" class="textinput" id="wpsl-preloader">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['preloader_label'] ) ); ?>" name="wpsl_label[preloader]" class="textinput" id="wpsl-preloader">
                         </p>
                         <p>
                             <label for="wpsl-results"><?php _e( 'Results:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['results_label'] ); ?>" name="wpsl_label[results]" class="textinput" id="wpsl-results">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['results_label'] ) ); ?>" name="wpsl_label[results]" class="textinput" id="wpsl-results">
                         </p>
                         <p>
                             <label for="wpsl-phone"><?php _e( 'Phone:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['phone_label'] ); ?>" name="wpsl_label[phone]" class="textinput" id="wpsl-phone">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['phone_label'] ) ); ?>" name="wpsl_label[phone]" class="textinput" id="wpsl-phone">
                         </p>                        
                         <p>
                             <label for="wpsl-fax"><?php _e( 'Fax:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['fax_label'] ); ?>" name="wpsl_label[fax]" class="textinput" id="wpsl-fax">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['fax_label'] ) ); ?>" name="wpsl_label[fax]" class="textinput" id="wpsl-fax">
                         </p>
                         <p>
                             <label for="wpsl-hours"><?php _e( 'Hours:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['hours_label'] ); ?>" name="wpsl_label[hours]" class="textinput" id="wpsl-hours">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['hours_label'] ) ); ?>" name="wpsl_label[hours]" class="textinput" id="wpsl-hours">
                         </p>
                         <p>
                             <label for="wpsl-start"><?php _e( 'Start location:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['start_label'] ); ?>" name="wpsl_label[start]" class="textinput" id="wpsl-start">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['start_label'] ) ); ?>" name="wpsl_label[start]" class="textinput" id="wpsl-start">
                         </p>
                         <p>
                             <label for="wpsl-directions"><?php _e( 'Get directions:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['directions_label'] ); ?>" name="wpsl_label[directions]" class="textinput" id="wpsl-directions">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['directions_label'] ) ); ?>" name="wpsl_label[directions]" class="textinput" id="wpsl-directions">
                         </p>
                         <p>
                             <label for="wpsl-error"><?php _e( 'General error:', 'wpsl' ); ?></label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['error_label'] ); ?>" name="wpsl_label[error]" class="textinput" id="wpsl-error">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['error_label'] ) ); ?>" name="wpsl_label[error]" class="textinput" id="wpsl-error">
                         </p>
                         <p>
                             <label for="wpsl-limit"><?php _e( 'Query limit error:', 'wpsl' ); ?> *</label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['limit_label'] ); ?>" name="wpsl_label[limit]" class="textinput" id="wpsl-limit">
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['limit_label'] ) ); ?>" name="wpsl_label[limit]" class="textinput" id="wpsl-limit">
                         </p>
                         <em><?php _e( '* You can raise the <a href="https://developers.google.com/maps/documentation/javascript/usage#usage_limits">usage limit</a> by obtaining an API <a href="https://developers.google.com/maps/documentation/javascript/tutorial#api_key">key</a>, <br> and fill in the "API key" field at the top of this page.', 'wpsl' ); ?></em>
                     </div>        

@@ -34,8 +34,14 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
          * @return void
          */
 		public function render_store_locator() {			            
-			$output = require_once( WPSL_PLUGIN_DIR . 'frontend/templates/default.php' );	
-			$this->add_frontend_scripts();
+			
+            if ( $this->settings['store_below'] ) {
+                $output = require_once( WPSL_PLUGIN_DIR . 'frontend/templates/store-listings-below.php' );	
+            } else {
+                $output = require_once( WPSL_PLUGIN_DIR . 'frontend/templates/default.php' );	
+            }
+            
+            $this->add_frontend_scripts();
             
             return $output;
 		}
@@ -67,6 +73,7 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
          */
         public function get_dropdown_list( $list_type ) {
             
+            $dropdown_list = '';
 			$settings = explode( ',', $this->settings[$list_type] );
             
             /* Only show the distance unit when we are dealing with the search radius */
@@ -101,6 +108,7 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
          */
 		public function get_gmap_api_attributes() {
             
+            $api_data = '';
 			$api_attributes = array( 'language', 'key', 'region' );
 
 			foreach ( $api_attributes as $api_key ) {
@@ -166,37 +174,38 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
             $dropdown_defaults = $this->get_dropdown_defaults();
             
 			$settings = array(
-                'startMarker'     => $this->create_retina_filename( $this->settings['start_marker'] ),
-                'storeMarker'     => $this->create_retina_filename( $this->settings['store_marker'] ),
-				'autoLocate'      => $this->settings['auto_locate'],
-                'autoLoad'        => $this->settings['auto_load'],
-				'mapType'         => $this->settings['map_type'],
-				'zoomLevel' 	  => $this->settings['zoom_level'],
-				'zoomLatlng' 	  => $this->settings['zoom_latlng'],
-				'streetView' 	  => $this->settings['streetview'],
-                'panControls' 	  => $this->settings['pan_controls'],
-				'controlPosition' => $this->settings['control_position'],
-				'controlStyle' 	  => $this->settings['control_style'],
-				'markerBounce' 	  => $this->settings['marker_bounce'],
-                'newWindow' 	  => $this->settings['new_window'],
-                'resetMap'        => $this->settings['reset_map'],
-                'maxResults'      => $dropdown_defaults['max_results'],
-                'searchRadius'    => $dropdown_defaults['search_radius'],
-				'distanceUnit'    => $this->settings['distance_unit'],
-				'ajaxurl'         => admin_url( 'admin-ajax.php' ),
-				'path'		      => WPSL_URL,
+                'startMarker'       => $this->create_retina_filename( $this->settings['start_marker'] ),
+                'storeMarker'       => $this->create_retina_filename( $this->settings['store_marker'] ),
+				'autoLocate'        => $this->settings['auto_locate'],
+                'autoLoad'          => $this->settings['auto_load'],
+				'mapType'           => $this->settings['map_type'],
+				'zoomLevel'         => $this->settings['zoom_level'],
+				'zoomLatlng'        => $this->settings['zoom_latlng'],
+				'streetView'        => $this->settings['streetview'],
+                'panControls'       => $this->settings['pan_controls'],
+				'controlPosition'   => $this->settings['control_position'],
+				'controlStyle'      => $this->settings['control_style'],
+				'markerBounce'      => $this->settings['marker_bounce'],
+                'newWindow'         => $this->settings['new_window'],
+                'resetMap'          => $this->settings['reset_map'],
+                'directionRedirect' => $this->settings['direction_redirect'],
+                'maxResults'        => $dropdown_defaults['max_results'],
+                'searchRadius'      => $dropdown_defaults['search_radius'],
+				'distanceUnit'      => $this->settings['distance_unit'],
+				'ajaxurl'           => admin_url( 'admin-ajax.php' ),
+				'path'              => WPSL_URL,
 			);
 
 			$labels = array( 
-				'preloader'    => $this->settings['preloader_label'],
-				'noResults'    => $this->settings['no_results_label'],
-				'generalError' => $this->settings['error_label'],
-				'queryLimit'   => $this->settings['limit_label'],
-				'directions'   => $this->settings['directions_label'],
-				'phone'        => $this->settings['phone_label'],
-				'fax'          => $this->settings['fax_label'],
-				'hours'        => $this->settings['hours_label'],
-                'startPoint'   => $this->settings['start_label']
+				'preloader'    => stripslashes( $this->settings['preloader_label'] ),
+				'noResults'    => stripslashes( $this->settings['no_results_label'] ),
+				'generalError' => stripslashes( $this->settings['error_label'] ),
+				'queryLimit'   => stripslashes( $this->settings['limit_label'] ),
+				'directions'   => stripslashes( $this->settings['directions_label'] ),
+				'phone'        => stripslashes( $this->settings['phone_label'] ),
+				'fax'          => stripslashes( $this->settings['fax_label'] ),
+				'hours'        => stripslashes( $this->settings['hours_label'] ),
+                'startPoint'   => stripslashes( $this->settings['start_label'] )
 			);			
 
 			wp_localize_script( 'wpsl-js', 'wpslSettings', $settings );

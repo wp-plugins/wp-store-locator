@@ -282,7 +282,7 @@ class WPSL_Store_Overview extends WP_List_Table {
                             );
         } else {
             /* Order params */
-            $orderby = !empty ( $_GET["orderby"] ) ? mysql_real_escape_string ( $_GET["orderby"] ) : 'wpsl_id';
+            $orderby = !empty ( $_GET["orderby"] ) ? mysql_real_escape_string ( $_GET["orderby"] ) : 'store';
             $order = !empty ( $_GET["order"] ) ? mysql_real_escape_string ( $_GET["order"] ) : 'ASC';
             $order_sql = $orderby.' '.$order; 
 

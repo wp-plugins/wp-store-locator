@@ -8,6 +8,11 @@
     height:350px;
 }
 
+.wpsl-store-below #wpsl-gmap {
+    float:none;
+    width:100%;
+}
+
 /* Map reset button */
 #wpsl-reset-map {
     position:absolute; 
@@ -17,12 +22,13 @@
     background:#fff; 
     box-shadow:0 1px 2px rgba(64, 64, 64, 0.3);
     border-radius: 3px;
-    z-index:9999;
+    z-index:3;
     display:none;
 }
 #wpsl-reset-map:hover {
     cursor: pointer;
 }
+
 /* 
 Some themes set a box-shadow or max-width for all image / 
 div elements, we disable it to prevent it from messing up the map
@@ -38,14 +44,39 @@ div elements, we disable it to prevent it from messing up the map
     width:100%;
     overflow:hidden;
     clear:both;
+    margin-bottom:20px;
 }
 #wpsl-search-wrap {
     float:left;
+    width:100%;
+}
+
+/* Possible fix for vertical text issue in IE9? */
+.gm-style-cc {
+    word-wrap:normal;
+}
+
+#wpsl-search-wrap .wpsl-input,
+#wpsl-search-wrap .wpsl-select-wrap {
+    display:table;
+}
+
+#wpsl-search-wrap .wpsl-input label,
+#wpsl-search-wrap .wpsl-input input,
+#wpsl-search-wrap .wpsl-select-wrap #wpsl-radius,
+#wpsl-search-wrap .wpsl-select-wrap #wpsl-results,
+#wpsl-search-btn {
+    display:table-cell;
+}
+
+#wpsl-search-wrap label {
+    margin-bottom:0;
 }
 #wpsl-search-input {
     width:179px;
     padding: 7px 12px;
     font-size: 100%;
+    margin:0;
 /*    padding: 3% 12px;*/
 }
 #wpsl-search-wrap input,
@@ -84,6 +115,11 @@ div elements, we disable it to prevent it from messing up the map
     width:33%;
     margin-right:0.5%;
 }
+.wpsl-store-below #wpsl-result-list {
+    float:none;
+    width:100%;
+    margin:12px 0 0 0;
+}
 
 #wpsl-stores, 
 #wpsl-direction-details {
@@ -95,6 +131,10 @@ div elements, we disable it to prevent it from messing up the map
 #wpsl-result-list p {
     padding-left:10px;
 }
+.wpsl-store-below #wpsl-result-list p {
+    padding-left: 0;
+}
+
 #wpsl-result-list p a {
     display:block; 
     margin-bottom:10px;
@@ -107,6 +147,10 @@ div elements, we disable it to prevent it from messing up the map
     overflow: hidden;
     list-style: none outside none !important
 }
+.wpsl-store-below #wpsl-result-list li {
+    padding: 10px 10px 10px 0;
+}
+
 #wpsl-result-list li p {
     padding-left:0;
     margin-bottom:20px;
@@ -165,13 +209,17 @@ div elements, we disable it to prevent it from messing up the map
 #wpsl-search-btn {
     margin-right:10px;
     float:left;
-/*    height:32px;*/
+}
+
+#wpsl-search-wrap .wpsl-input label {
+    margin-right:0;
+}
+
+#wpsl-radius, #wpsl-results {
+    display:inline;
 }
 
 #wpsl-radius {margin-right:10px;}
-/*#wpsl-search-wrap #wpsl-results {
-    margin-right: 0;
-}*/
 #wpsl-search-btn:hover {
     cursor: pointer;
 }
@@ -184,7 +232,6 @@ div elements, we disable it to prevent it from messing up the map
 #wpsl-search-wrap div label {
     float:left;
     margin-right:10px;
-/*    margin-top: 4px;*/
     line-height: 32px;
 }
 
@@ -203,6 +250,11 @@ div elements, we disable it to prevent it from messing up the map
 }
 .wpsl-info-window span {
     display:block;
+}
+
+/* Fix for Google Voice breaking the phone numbers */
+.wpsl-info-window span span {
+    display:inline !important;
 }
 .wpsl-info-window p {
     margin-bottom:10px;
@@ -460,7 +512,8 @@ wpsl-search-input.focus,
 
     .wpsl-input label,
     #wpsl-radius label {
-        min-width: 100px;
+        min-width: 100px !important;
+        width:auto;
     }
 }
 
@@ -491,7 +544,7 @@ wpsl-search-input.focus,
 @media (max-width: 675px) {
     #wpsl-search-wrap #wpsl-search-btn {
         float:left;
-        margin:0 5px 5px 0;
+        margin:0 5px 0 0;
     }
 
     .wpsl-dropdown {
@@ -534,6 +587,9 @@ wpsl-search-input.focus,
 }
 
 @media (max-width: 570px) {
+    #wpsl-search-wrap #wpsl-search-btn {
+        margin-bottom: 5px;
+    }
     #wpsl-search-input {
         width: 277px;
     }
@@ -611,7 +667,7 @@ wpsl-search-input.focus,
 
 @media (max-width: 375px) {
     #wpsl-search-input {
-        width:88%;
+        width:auto !important;
     }
     .wpsl-no-results #wpsl-search-input {
         width:200px !important;

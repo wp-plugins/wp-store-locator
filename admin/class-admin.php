@@ -32,11 +32,12 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          */
 		function __construct() {
 			add_action( 'init', array( $this, 'output_buffer' ) );
+           
+            $this->settings = $this->get_settings();
+                                    
 			add_action( 'admin_init', array( $this, 'admin_init' ) );
 			add_action( 'wp_loaded', array( $this, 'init' ) );
             add_action( 'wp_ajax_delete_store', array( $this, 'delete_store_ajax' ) );
-            
-            $this->settings = $this->get_settings();
 		}
 		
 		public function output_buffer() {
@@ -44,14 +45,80 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 		}
 		
         /**
-         * Register a callback function for the settings page
+         * Register a callback function for the settings page and check if we need to show the "missing start point" warning.
          *
          * @since 1.0
          * @return void
          */
 		public function admin_init() {
-		 	register_setting( 'wpsl_settings', 'wpsl_settings', array( $this, 'sanitize_settings' ) );
+            
+            global $current_user;
+            
+            $this->check_upgrade();
+                        
+            if ( ( current_user_can( 'install_plugins' ) ) && is_admin() ) {
+                if ( ( empty( $this->settings['zoom_latlng'] ) && !get_user_meta( $current_user->ID, 'wpsl_disable_location_warning' ) ) ) {
+                    add_action( 'wp_ajax_disable_location_warning', array( $this, 'disable_location_warning_ajax' ) );
+                    add_action( 'admin_footer', array( $this, 'show_location_warning' ) );
+                }
+            }
+            
+            register_setting( 'wpsl_settings', 'wpsl_settings', array( $this, 'sanitize_settings' ) );
 		}
+        
+        /**
+         * If the db doesn't hold the current version, run the upgrade procedure
+         *
+         * @since 1.2
+         * @return void
+         */
+        public function check_upgrade() {
+            
+            $current_version = get_option( 'wpsl_version' );
+	
+            if ( version_compare( $current_version, WPSL_VERSION_NUM, '===' ) )	
+                return;
+   
+            if ( version_compare( $current_version, '1.1', '<' ) ) {
+                if ( is_array( $this->settings ) ) {
+                    /* Add the default value for the reset map option */
+                    if ( empty( $this->settings['reset_map'] ) ) {
+                        $this->settings['reset_map'] = 0;
+                        update_option( 'wpsl_settings', $this->settings );
+                    }
+
+                    /* Add the default value for the way the store listings are shown, either below or next to the map */
+                    if ( empty( $this->settings['auto_load'] ) ) {
+                        $this->settings['auto_load'] = 1;
+                        update_option( 'wpsl_settings', $this->settings );
+                    }	
+                    
+                    /* Add the default value for the route redirect */
+                    if ( empty( $this->settings['new_window'] ) ) {
+                        $this->settings['new_window'] = 0;
+                        update_option( 'wpsl_settings', $this->settings );
+                    }                           
+                } 
+            }
+            
+            if ( version_compare( $current_version, '1.2', '<' ) ) {
+                if ( is_array( $this->settings ) ) {
+                    /* Add the default value for the way the store listings are shown, either below or next to the map */
+                    if ( empty( $this->settings['store_below'] ) ) {
+                        $this->settings['store_below'] = 0;
+                        update_option( 'wpsl_settings', $this->settings );
+                    }	
+                    
+                    /* Add the default value for the route redirect */
+                    if ( empty( $this->settings['direction_redirect'] ) ) {
+                        $this->settings['direction_redirect'] = 0;
+                        update_option( 'wpsl_settings', $this->settings );
+                    }                           
+                } 
+            }
+            
+            update_option( 'wpsl_version', WPSL_VERSION_NUM );
+        }
 		
         /**
          * Add the admin menu and enqueue the admin scripts
@@ -212,7 +279,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                                     $this->store_data['street'],
                                     $this->store_data['city'],
                                     $this->store_data['state'],
-                                    strtoupper ( $this->store_data['zip'] ),
+                                    strtoupper( $this->store_data['zip'] ),
                                     $this->store_data['country'],
                                     $this->store_data['country-iso'],
                                     $this->store_data['latlng']['lat'],
@@ -380,6 +447,37 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 			
 			add_settings_error ( 'setting-errors', esc_attr( 'settings_fail' ), $error_msg, 'error' );
 		}
+        
+       /**
+        * Display an error message when no start location is defined, and the warning hasn't been disabled
+        * 
+        * @since 1.2
+        * @return void
+        */
+       public function show_location_warning() {
+           if ( $_GET['page'] !== 'wpsl_settings' ) {
+               echo "<div id='message' class='error'><p><strong>" . sprintf( __( "Before adding the [wpsl] shortcode to a page, please don't forget to define a start point on the %ssettings%s page.", "wpsl" ), "<a href='" . admin_url( 'admin.php?page=wpsl_settings' ) . "'>", "</a>" ) . " <a class='wpsl-dismiss' data-nonce='" . wp_create_nonce( 'wpsl-dismiss' ) . "' href='#'>" . __( "Dismiss", "wpsl" ) . "</a></p></div>";   
+           }
+        }
+       
+       /**
+        * Disable the missing start location warning
+        * 
+        * @since 1.2
+        * @return void
+        */
+        public function disable_location_warning_ajax() {
+           
+            global $current_user;
+
+            if ( !current_user_can( 'manage_options' ) )
+                die( '-1' );
+            check_ajax_referer( 'wpsl-dismiss' );
+
+            $update_id = add_user_meta( $current_user->ID, 'wpsl_disable_location_warning', 'true', true );
+                                     
+            die();
+       }
 		
 		/**
          * Sanitize the submitted plugin settings
@@ -491,11 +589,13 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 				$output['label_width'] = $this->get_default_setting( 'label_width' );
 			}
 			
-            $output['results_dropdown'] = isset( $_POST['wpsl_design']['design_results'] ) ? 1 : 0;          
-            $output['new_window']       = isset( $_POST['wpsl_design']['new_window'] ) ? 1 : 0;	
-            $output['reset_map']        = isset( $_POST['wpsl_design']['reset_map'] ) ? 1 : 0;	
-            $output['start_marker'] 	= wp_filter_nohtml_kses( $_POST['wpsl_map']['start_marker'] );
-            $output['store_marker'] 	= wp_filter_nohtml_kses( $_POST['wpsl_map']['store_marker'] );
+            $output['results_dropdown']   = isset( $_POST['wpsl_design']['design_results'] ) ? 1 : 0;          
+            $output['new_window']         = isset( $_POST['wpsl_design']['new_window'] ) ? 1 : 0;	
+            $output['reset_map']          = isset( $_POST['wpsl_design']['reset_map'] ) ? 1 : 0;
+            $output['store_below']        = isset( $_POST['wpsl_design']['store_below'] ) ? 1 : 0;
+            $output['direction_redirect'] = isset( $_POST['wpsl_design']['direction_redirect'] ) ? 1 : 0;	
+            $output['start_marker'] 	  = wp_filter_nohtml_kses( $_POST['wpsl_map']['start_marker'] );
+            $output['store_marker'] 	  = wp_filter_nohtml_kses( $_POST['wpsl_map']['store_marker'] );
 			
 			$missing_labels = false;
 			$required_labels = array( 
@@ -574,7 +674,6 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                     );
                     
 					return $response;
-					break;
 				case 'ZERO_RESULTS':
                     $msg = __( 'The Google Geocoding API returned no results for the store location. Please change the location and try again.', 'wpsl' );
 					break;	
@@ -653,7 +752,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          */
         public function show_marker_options() {
             
-            $marker_list;
+            $marker_list = '';
             $marker_images = $this->get_available_markers();
             $marker_locations = array( 
                 "start", 

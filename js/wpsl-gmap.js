@@ -3,23 +3,24 @@ var geocoder, map, infowindow, directionsDisplay, directionsService, geolocation
 	markersArray = [],
 	mapDefaults = {},
 	resetMap = false,
+	startAddress,
+	startLatLng,
 	autoLoad = wpslSettings.autoLoad,
 	$selects = $( "#wpsl-search-wrap select" );
 
 /* Load Google Maps */
 function initializeGmap() {
     var myOptions, zoomControlPosition, zoomControlStyle,
-		latLng, zoomTo, zoomLevel, mapType,
-		startMarker = {},
+		latLng, zoomLevel, mapType,
 		streetViewVisible = ( wpslSettings.streetView == 1 ) ? true : false;
 
     /* If no zoom location is defined, we show the entire world */	
     if ( wpslSettings.zoomLatlng !== '' ) {
 		latLng = wpslSettings.zoomLatlng.split( ',' );
-		zoomTo = new google.maps.LatLng( latLng[0], latLng[1] );
+		startLatLng = new google.maps.LatLng( latLng[0], latLng[1] );
 		zoomLevel = parseInt( wpslSettings.zoomLevel );
     } else {
-		zoomTo = new google.maps.LatLng( 0,0 );
+		startLatLng = new google.maps.LatLng( 0,0 );
 		zoomLevel = 1;
     }
 
@@ -64,7 +65,7 @@ function initializeGmap() {
 
     myOptions = {
 		zoom: zoomLevel,
-		center: zoomTo,
+		center: startLatLng,
 		mapTypeId: mapType,
 		mapTypeControl: false,
 		panControl: false,
@@ -95,14 +96,12 @@ function initializeGmap() {
 }
 
 function showStores() {
-	var latLng = wpslSettings.zoomLatlng.split( ',' ),
-		zoomTo = new google.maps.LatLng( latLng[0], latLng[1] ),
-		startMarker = {
+	var startMarker = {
 			store: wpslLabels.startPoint
 		};
 	
-	addMarker( zoomTo, 0, startMarker, true ); // This marker is the 'start location' marker. With a storeId of 0, no name and is draggable
-	findStoreLocations( zoomTo, resetMap, autoLoad );
+	addMarker( startLatLng, 0, startMarker, true ); // This marker is the 'start location' marker. With a storeId of 0, no name and is draggable
+	findStoreLocations( startLatLng, resetMap, autoLoad );
 }
 
 /* Check if Geolocation detection is supported. If there is an error / timeout with determining the users 
@@ -168,9 +167,8 @@ $( "#wpsl-search-btn" ).on( "click", function() {
 
 /* Reset the map */
 $( "#wpsl-reset-map" ).on( "click", function() {
-	var latLng;
-		resetMap = true;
-	
+	var resetMap = true;
+
 	/* When the start marker is dragged the autoload value is set to false. 
 	 * So we need to check the correct value when the reset btn is pushed before reloading the stores. 
 	 */
@@ -229,12 +227,7 @@ $( "#wpsl-result-list" ).on( "click", ".wpsl-back", function() {
     }
 
     fitBounds();
-	
-    /* After the markers are restored, the direction link has lost it's click handler. So we reinstate it. */
-	$( ".wpsl-info-window" ).on( "click", ".wpsl-directions", function() {	
-		renderDirections( $(this) );
-		return false;
-	});
+	infoWindowDirectionButton();
    
     $( ".wpsl-direction-before, .wpsl-direction-after" ).remove();
     $( "#wpsl-stores" ).show();
@@ -287,7 +280,7 @@ if ( wpslSettings.markerBounce == 1 ) {
 
 /* Let a single marker bounce */
 function letsBounce( storeId, status ) {
-    var storeId, status, i, len, animation = '';
+    var i, len, animation = '';
 
     if ( status == "start" ) {
 		animation = google.maps.Animation.BOUNCE		
@@ -371,7 +364,7 @@ function codeAddress() {
 
 /* Geocode the user input and set the returned zipcode in the input field */ 
 function reverseGeocode( latLng ) {
-    var latLng, zipCode;
+    var zipCode;
 		
     geocoder.geocode( {'latLng': latLng}, function( response, status ) {
 		if ( status == google.maps.GeocoderStatus.OK ) {
@@ -383,8 +376,8 @@ function reverseGeocode( latLng ) {
 		} else {
 			geocodeNotification( status );
 		}
-    }
-)};
+	});
+}
 
 /* Filter out the zipcode from the response */
 function filterApiResponse( response ) {
@@ -405,8 +398,30 @@ function filterApiResponse( response ) {
 }
 
 function findStoreLocations( startLatLng, resetMap, autoLoad ) {		
-    var location,
-		center = map.getCenter(),
+	
+	/* Check if we need to open a new window and show the route on the Google Maps site itself. */
+	if ( wpslSettings.directionRedirect == 1 ) {
+		findFormattedAddress( startLatLng, function() {
+			makeAjaxRequest( startLatLng, resetMap, autoLoad );
+		});
+	} else {
+		makeAjaxRequest( startLatLng, resetMap, autoLoad );
+	}
+}
+
+/* The formatted address is used to build the url for the driving direction and send the user to maps.google.com */
+function findFormattedAddress( latLng, callback ) {
+	geocoder.geocode( {'latLng': latLng}, function( response, status ) {
+		if ( status == google.maps.GeocoderStatus.OK ) {
+			startAddress = response[0].formatted_address;
+			callback();
+		} else {
+			geocodeNotification( status );
+		}
+	});
+}
+function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
+	var location,
 		infoWindowData = {},
 		storeData = "",
 		draggable = false,
@@ -416,8 +431,12 @@ function findStoreLocations( startLatLng, resetMap, autoLoad ) {
 			action: "store_search",
 			lat: startLatLng.lat(),
 			lng: startLatLng.lng()
+		},
+		url = {
+			src : "#",
+			target : ""
 		};
-			
+		
 	/* 
 	 * If we reset the map we use the default dropdown
 	 * values instead of the selected values
@@ -434,7 +453,7 @@ function findStoreLocations( startLatLng, resetMap, autoLoad ) {
 	if ( autoLoad == 1 ) {
 		ajaxData.autoload = 1 ;
 	}
-		
+	
 	/* Add the preloader */
 	$storeList.empty().append( "<li class='wpsl-preloader'><img src='" + preloader + "'/><span>" + wpslLabels.preloader + "</span></li>" );
 		
@@ -445,11 +464,13 @@ function findStoreLocations( startLatLng, resetMap, autoLoad ) {
 
 	    if ( response.success !== false ) {
 			if ( response.length > 0 ) {
+				
 				$.each( response, function( index ) {
 					infoWindowData = {
 						store: response[index].store,
 						street: response[index].street,
 						city: response[index].city,
+						country: response[index].country,
 						state: response[index].state,
 						zip: response[index].zip,
 						description: response[index].description,
@@ -463,7 +484,7 @@ function findStoreLocations( startLatLng, resetMap, autoLoad ) {
 
 					location = new google.maps.LatLng( response[index].lat, response[index].lng );	
 					addMarker( location, response[index].id, infoWindowData, draggable );	
-					storeData = storeData + storeHtml( response[index] );	
+					storeData = storeData + storeHtml( response[index], url );	
 					$("#wpsl-reset-map").show();					
 				});
 
@@ -471,15 +492,18 @@ function findStoreLocations( startLatLng, resetMap, autoLoad ) {
 				$storeList.append( storeData );
 				
 				$( "#wpsl-result-list" ).on( "click", ".wpsl-directions", function() {	
-					renderDirections( $(this) );
-					return false;
+					/* Check if we need to disable the rendering of the direction on the map or not. */
+					if ( wpslSettings.directionRedirect != 1 ) {
+						renderDirections( $(this) );
+						return false;
+					}
 				});
-
+				
+				fitBounds();
 			} else {
 				$storeList.html( "<li class='no-results'>" + wpslLabels.noResults + "</li>" );
 			}
 			
-			fitBounds();
 	    } else {
 			alert( wpslLabels.generalError );
 	    }
@@ -496,9 +520,9 @@ function findStoreLocations( startLatLng, resetMap, autoLoad ) {
 					zoomLevel : map.getZoom()
 				};	
 			}
-		}
-		
-	});
+		}		
+	});	
+
 }
 
 /* Add a new marker to the map based on the provided location (latlng) */
@@ -537,12 +561,9 @@ function addMarker( location, storeId, infoWindowData, draggable ) {
 		} else {
 			infowindow.setContent( wpslLabels.startPoint );
 		}	
-		infowindow.open( map, marker );
 		
-		$( ".wpsl-info-window" ).on( "click", ".wpsl-directions", function() {	
-			renderDirections( $(this) );
-			return false;
-		});
+		infowindow.open( map, marker );
+		infoWindowDirectionButton();
     });
 
     /* Store the marker for later use */
@@ -558,10 +579,22 @@ function addMarker( location, storeId, infoWindowData, draggable ) {
     }
 }
 
+/* Activate the click listener for the direction buttons */
+function infoWindowDirectionButton() {
+	$( ".wpsl-info-window" ).on( "click", ".wpsl-directions", function() {	
+		/* Check if we need to disable the rendering of the direction on the map or not. */
+		if ( wpslSettings.directionRedirect != 1 ) {
+			renderDirections( $(this) );
+			return false;
+		}
+	});
+}
+
 /* Create the data for the infowindows on Google Maps */
 function createInfoWindowHtml( infoWindowData, storeId ) {
-    var storeHeader, 
-		newWindow = '',
+    var storeHeader,
+		url,
+		newWindow = "",
 		windowContent = "<div data-store-id='" + storeId + "' class='wpsl-info-window'>";
     
     /* Check if we need to turn the store name into a link or not */
@@ -597,15 +630,43 @@ function createInfoWindowHtml( infoWindowData, storeId ) {
 	if ( ( typeof( infoWindowData.hours ) !== "undefined" ) && ( infoWindowData.hours !== "" ) ) {
 		windowContent += "<div class='wpsl-store-hours'><strong>" + wpslLabels.hours + "</strong> " + infoWindowData.hours + "</div>";
     }
+	
+	if ( wpslSettings.directionRedirect == 1 ) {			
+		url = createDirectionUrl( infoWindowData.street, infoWindowData.city, infoWindowData.zip, infoWindowData.country );
+	} else {
+		url = {
+			src : "#",
+			target : ""
+		};
+	}
 
-    windowContent += "<a class='wpsl-directions' href='#'>" + wpslLabels.directions + "</a>";
+    windowContent += "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a>";
     windowContent += "</div>";
 
     return windowContent;
 }
 
-function storeHtml( response ) {
-	var html, storeImg = "",
+function createDirectionUrl( street, city, zip, country ) {
+	var destinationAddress, url;
+	
+	/* If we somehow failed to determine the start address, just set it to empty */
+	if ( typeof( startAddress ) === 'undefined' ) {
+		startAddress = '';
+	}
+
+	destinationAddress = street + ', ' + city + ', ' + zip + ', ' + country;
+
+	url = {
+		src : "https://maps.google.com/maps?saddr=" + encodeURIComponent( startAddress ) + "&daddr=" + encodeURIComponent( destinationAddress ) + "",
+		target : "target='_blank'"
+	};
+
+	return url;
+}
+
+function storeHtml( response, url ) {
+	var html = "", 
+		storeImg = "",
 		id = response.id,
 		store = response.store,
 		street = response.street, 
@@ -619,8 +680,12 @@ function storeHtml( response ) {
 		if ( ( typeof( thumb ) !== "undefined" ) && ( thumb !== "" ) ) {
 			storeImg = "<img class='wpsl-store-thumb' src='" + thumb + "' width='48' height='48'  alt='" + store + "' />";
 		}
-
-		html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + street + "</span>"  + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p></div>" + distance + "<a class='wpsl-directions' href='#'>" + wpslLabels.directions + "</a></li>";
+		
+		if ( wpslSettings.directionRedirect == 1 ) {			
+			url = createDirectionUrl( street, city, zip, country );
+		}
+		
+		html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + street + "</span>"  + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p></div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
 
 	return html;
 }

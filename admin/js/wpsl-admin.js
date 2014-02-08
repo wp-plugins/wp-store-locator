@@ -4,8 +4,7 @@ var map, geocoder, uploadFrame,
 
 /* Load the Google Maps */
 function initializeGmap() {
-	var draggable, alt,
-		myOptions = {
+	var myOptions = {
 			zoom: 2,
 			center: new google.maps.LatLng( "52.378153", "4.899363" ),
 			mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -252,8 +251,18 @@ $( "#wpsl-thumb-wrap" ).on( "click", "#wpsl-media-upload", function( e ) {
 	});
 
 	uploadFrame.on( "select", function() {
-		var media_attachment = uploadFrame.state().get( "selection" ).first().toJSON();
-		setLocationThumb( media_attachment.sizes.thumbnail.url, media_attachment.id ); 
+		var thumbUrl,
+			media_attachment = uploadFrame.state().get( "selection" ).first().toJSON();
+		
+		if ( typeof( media_attachment.sizes.thumbnail ) !== 'undefined' ) {
+			thumbUrl = media_attachment.sizes.thumbnail.url; 
+		} else if ( typeof( media_attachment.sizes.medium ) !== 'undefined' ) {
+			thumbUrl = media_attachment.sizes.medium.url; 
+		} else if ( typeof( media_attachment.sizes.full ) !== 'undefined' ) {
+			thumbUrl = media_attachment.sizes.full.url; 
+		}
+		
+		setLocationThumb( thumbUrl, media_attachment.id ); 
 	});
 
 	uploadFrame.open();
@@ -287,8 +296,7 @@ $( "#wpsl-store-overview" ).on( "click", ".wpsl-delete-store-btn", function() {
 	var elem = $(this),
 		dialogBox = $( "#wpsl-delete-confirmation" ),
 		cancelBtn =  dialogBox.find( ".button-secondary" ),
-		submitBtn =  dialogBox.find( ".button-primary" ),
-		storeId = $(this).next( "input[name='wpsl_store_id']" ).val();
+		submitBtn =  dialogBox.find( ".button-primary" );
 
 	dialogBox.dialog({
 		width: 325,
@@ -348,16 +356,31 @@ function deleteStore( elem ) {
 	});	
 }
 
-$( ".wpsl-marker-list input[type=radio]" ).click( function(){
+$( ".wpsl-marker-list input[type=radio]" ).click( function() {
 	$(this).parents( ".wpsl-marker-list" ).find( "li" ).removeClass();
 	$(this).parent( "li" ).addClass( "wpsl-active-marker" );
 });
 
-$( ".wpsl-marker-list li" ).click( function(){
+$( ".wpsl-marker-list li" ).click( function() {
 	$(this).parents( ".wpsl-marker-list" ).find( "input" ).prop( "checked", false );
 	$(this).find( "input" ).prop( "checked", true );
 	$(this).siblings().removeClass();
 	$(this).addClass( "wpsl-active-marker" );
+});
+
+/* Handle a click on the dismiss button. So that the warning msg that no starting point is set is disabled */
+$( ".wpsl-dismiss" ).click( function() {
+	var $link = $(this), 
+		data = { 
+			action: "disable_location_warning", 
+			_ajax_nonce: $link.attr( "data-nonce" )
+		};
+		
+	$.post( ajaxurl, data );
+	
+	$( "#message" ).remove();
+
+	return false;
 });
 
 /* Insert the preloader after the button */

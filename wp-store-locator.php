@@ -5,7 +5,7 @@ Plugin URI:
 Description: An easy to use location management system that enables users to search for nearby physical stores
 Author: Tijmen Smit
 Author URI: http://tijmensmit.com/
-Version: 1.1
+Version: 1.2
 Text Domain: wpsl
 Domain Path: /languages/
 License: GPLv3
@@ -49,45 +49,47 @@ if ( !class_exists( 'WP_Store_locator' ) ) {
         * @var array
         */
         public $default_settings = array(
-            'api_key' 		   => '',
-            'api_language'     => 'en',
-            'api_region' 	   => '',
-            'distance_unit'    => 'km',
-            'max_results' 	   => '(25),50,75,100',
-            'search_radius'    => '10,25,(50),100,200,500',
-            'marker_bounce'    => '1',
-            'auto_locate' 	   => '1',
-            'auto_load'        => '1',
-            'zoom_level' 	   => '3',
-            'zoom_name' 	   => '',
-            'zoom_latlng' 	   => '',
-            'height' 		   => '350',
-            'map_type'         => 'roadmap',
-            'pan_controls'     => '0',
-            'streetview' 	   => '0',
-            'results_dropdown' => '1',
-            'infowindow_width' => '225',
-            'search_width'     => '179',
-            'label_width'      => '95',
-            'control_position' => 'left',
-            'control_style'    => 'small',
-            'new_window'       => '0',
-            'reset_option'     => '0',
-            'start_marker'     => 'red.png',
-            'store_marker'     => 'blue.png',
-            'start_label'      => 'Start location',
-            'search_label'     => 'Your location',
-            'search_btn_label' => 'Search',
-            'preloader_label'  => 'Searching...',
-            'radius_label'     => 'Search radius',
-            'no_results_label' => 'No results found',
-            'results_label'    => 'Results',	
-            'directions_label' => 'Directions',
-            'error_label'      => 'Something went wrong, please try again!',
-            'limit_label'      => 'API usage limit reached',
-            'phone_label'      => 'Phone',
-            'fax_label'        => 'Fax',
-            'hours_label'      => 'Hours'
+            'api_key' 		     => '',
+            'api_language'       => 'en',
+            'api_region' 	     => '',
+            'distance_unit'      => 'km',
+            'max_results' 	     => '(25),50,75,100',
+            'search_radius'      => '10,25,(50),100,200,500',
+            'marker_bounce'      => '1',
+            'auto_locate' 	     => '1',
+            'auto_load'          => '1',
+            'zoom_level' 	     => '3',
+            'zoom_name' 	     => '',
+            'zoom_latlng' 	     => '',
+            'height' 		     => '350',
+            'map_type'           => 'roadmap',
+            'pan_controls'       => '0',
+            'streetview' 	     => '0',
+            'results_dropdown'   => '1',
+            'infowindow_width'   => '225',
+            'search_width'       => '179',
+            'label_width'        => '95',
+            'control_position'   => 'left',
+            'control_style'      => 'small',
+            'new_window'         => '0',
+            'reset_map'          => '0',
+            'store_below'        => '0',
+            'direction_redirect' => '0',
+            'start_marker'       => 'red.png',
+            'store_marker'       => 'blue.png',
+            'start_label'        => 'Start location',
+            'search_label'       => 'Your location',
+            'search_btn_label'   => 'Search',
+            'preloader_label'    => 'Searching...',
+            'radius_label'       => 'Search radius',
+            'no_results_label'   => 'No results found',
+            'results_label'      => 'Results',	
+            'directions_label'   => 'Directions',
+            'error_label'        => 'Something went wrong, please try again!',
+            'limit_label'        => 'API usage limit reached',
+            'phone_label'        => 'Phone',
+            'fax_label'          => 'Fax',
+            'hours_label'        => 'Hours'
         );        
         
         /**
@@ -121,7 +123,7 @@ if ( !class_exists( 'WP_Store_locator' ) ) {
         public function define_constants() {
             
             if ( !defined( 'WPSL_VERSION_NUM' ) )	
-                define( 'WPSL_VERSION_NUM', '1.0' );
+                define( 'WPSL_VERSION_NUM', '1.2' );
 
             if ( !defined( 'WPSL_URL' ) )
                 define( 'WPSL_URL', plugin_dir_url( __FILE__ ) );
