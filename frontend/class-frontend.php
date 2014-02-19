@@ -189,6 +189,9 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
                 'newWindow'         => $this->settings['new_window'],
                 'resetMap'          => $this->settings['reset_map'],
                 'directionRedirect' => $this->settings['direction_redirect'],
+                'moreInfo'          => $this->settings['more_info'],
+                'mouseFocus'        => $this->settings['mouse_focus'],
+                'storeBelow'        => $this->settings['store_below'],
                 'maxResults'        => $dropdown_defaults['max_results'],
                 'searchRadius'      => $dropdown_defaults['search_radius'],
 				'distanceUnit'      => $this->settings['distance_unit'],
@@ -199,6 +202,7 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
 			$labels = array( 
 				'preloader'    => stripslashes( $this->settings['preloader_label'] ),
 				'noResults'    => stripslashes( $this->settings['no_results_label'] ),
+                'moreInfo'     => stripslashes( $this->settings['more_label'] ),
 				'generalError' => stripslashes( $this->settings['error_label'] ),
 				'queryLimit'   => stripslashes( $this->settings['limit_label'] ),
 				'directions'   => stripslashes( $this->settings['directions_label'] ),

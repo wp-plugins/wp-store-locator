@@ -3,7 +3,7 @@ Contributors: tijmensmit
 Tags: google maps, store locator, business locations, geocoding, stores, geo
 Requires at least: 3.5
 Tested up to: 3.8.1
-Stable tag: 1.2.1
+Stable tag: 1.2.11
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -64,6 +64,12 @@ Make sure you don't have any security plugins, or custom functions running that 
 5. Overview from the current stores
 
 == Changelog ==
+
+= 1.2.11 =
+* Fixed the distance format always using km when you clicked the 'directions' text in the marker
+* Fixed an issue where a CSS rule in some themes would place a background image on the active item in the dropdown list
+* Added an option to disable the mouse cursor on pageload focusing on the location input field 
+* Added an option to add a 'More info' link to the store listings, which when clicked will open the infowindow in the marker on the map
 
 = 1.2.1 =
 * Added an option to show the store listings below the map instead of next to it

@@ -83,11 +83,13 @@ function initializeGmap() {
 		checkGeolocation();
     } else {
 		showStores();
-			
-		/* Put the mousecursor in the store search field */
+	}
+					
+	/* Move the mousecursor to the store search field if the focus option is enabled */
+	if ( wpslSettings.mouseFocus == 1 ) {
 		$("#wpsl-search-input").focus();
 	}
-	
+		
 	/* Style the dropdown menu */
 	$selects.easyDropDown({
 		cutOff: 10,
@@ -188,7 +190,6 @@ $( "#wpsl-reset-map" ).on( "click", function() {
 			handleGeolocationQuery( geolocationLatlng, resetMap );
 		} else {
 			showStores();
-			$("#wpsl-search-input").focus();
 		}		
 	}
 	
@@ -299,13 +300,22 @@ function letsBounce( storeId, status ) {
 
 /* Show the directions on the map */
 function calcRoute( start, end ) {
-    var legs, len, step, index, direction, i, j,
+    var legs, len, step, index, direction, i, j, distanceUnit,
 		directionStops = "",    
-		request = {
-			origin: start,
-			destination: end,
-			travelMode: google.maps.DirectionsTravelMode.DRIVING
-		};
+		request = {};
+		
+	if ( wpslSettings.distanceUnit == 'km' ) {
+		distanceUnit = google.maps.UnitSystem.METRIC
+	} else {
+		distanceUnit = google.maps.UnitSystem.IMPERIAL
+	}
+
+	request = {
+		origin: start,
+		destination: end,
+		travelMode: google.maps.DirectionsTravelMode.DRIVING,
+		unitSystem: distanceUnit 
+	};
 
     directionsService.route( request, function( response, status ) {
 		if ( status == google.maps.DirectionsStatus.OK ) {
@@ -420,6 +430,7 @@ function findFormattedAddress( latLng, callback ) {
 		}
 	});
 }
+
 function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 	var location,
 		infoWindowData = {},
@@ -522,7 +533,11 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 			}
 		}		
 	});	
-
+	
+	/* Move the mousecursor to the store search field if the focus option is enabled */
+	if ( wpslSettings.mouseFocus == 1 ) {
+		$("#wpsl-search-input").focus();
+	}
 }
 
 /* Add a new marker to the map based on the provided location (latlng) */
@@ -571,7 +586,6 @@ function addMarker( location, storeId, infoWindowData, draggable ) {
 	
 	if ( draggable ) {
 		google.maps.event.addListener( marker, "dragend", function( event ) { 
-			//deleteOverlays();
 			map.setCenter( event.latLng );
 			reverseGeocode( event.latLng );
 			findStoreLocations( event.latLng, resetMap, autoLoad = false );
@@ -667,6 +681,8 @@ function createDirectionUrl( street, city, zip, country ) {
 function storeHtml( response, url ) {
 	var html = "", 
 		storeImg = "",
+		moreInfo = "",
+		moreInfoUrl = "#",
 		id = response.id,
 		store = response.store,
 		street = response.street, 
@@ -676,16 +692,30 @@ function storeHtml( response, url ) {
 		thumb = response.thumb,
 		country = response.country,
 		distance = parseFloat( response.distance ).toFixed(1) + " " + wpslSettings.distanceUnit;
-
+	
 		if ( ( typeof( thumb ) !== "undefined" ) && ( thumb !== "" ) ) {
 			storeImg = "<img class='wpsl-store-thumb' src='" + thumb + "' width='48' height='48'  alt='" + store + "' />";
 		}
 		
+		/* Check if we need to create an url that sends the user to maps.google.com for driving directions */
 		if ( wpslSettings.directionRedirect == 1 ) {			
 			url = createDirectionUrl( street, city, zip, country );
 		}
 		
-		html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + street + "</span>"  + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p></div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
+		/* Check if we need to show the 'more info' link in the store listings */
+		if ( wpslSettings.moreInfo == 1 ) {	
+			
+		   /* If we show the store listings under the map, we do want to jump to the 
+			* top of the map to focus on the opened infowindow 
+			*/
+			if ( wpslSettings.storeBelow == 1 ) {
+				moreInfoUrl = '#wpsl-search-wrap';
+			}
+			
+			moreInfo = "<p><a class='wpsl-store-details' data-store-id='" + id + "' href=" + moreInfoUrl + ">More info</a></p>";
+		}
+		
+		html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + street + "</span>"  + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p>" + moreInfo + "</div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
 
 	return html;
 }
@@ -747,12 +777,30 @@ function geocodeNotification( status ) {
 /* Trigger the search when the user presses "enter" on the keyboard */
 $( "#wpsl-search-input" ).keydown( function ( event ) {
     var keypressed = event.keyCode || event.which;
+	
     if ( keypressed == 13 ) {
 		$( "#wpsl-search-btn" ).trigger( "click" );
     }
 });
 
-if ( $("#wpsl-gmap").length ) {
+$( "#wpsl-stores" ).on( "click", ".wpsl-store-details", function() {	
+	var i, storeId = $( this ).data( "store-id" );
+
+    for ( i = 0, len = markersArray.length; i < len; i++ ) {
+		if ( markersArray[i].storeId == storeId ) {
+			google.maps.event.trigger( markersArray[i], "click" );
+		}
+    }	
+	
+	/* If we show the store listings under the map, we do want to jump to the 
+	 * top of the map to focus on the opened infowindow 
+	 */
+	if ( wpslSettings.storeBelow != 1 ) {
+		return false;
+	}
+});
+
+if ( $( "#wpsl-gmap" ).length ) {
     google.maps.event.addDomListener( window, "load", initializeGmap );
 }
 

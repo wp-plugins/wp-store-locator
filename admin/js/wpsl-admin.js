@@ -378,7 +378,7 @@ $( ".wpsl-dismiss" ).click( function() {
 		
 	$.post( ajaxurl, data );
 	
-	$( "#message" ).remove();
+	$( "#wpbody-content #message.error" ).remove();
 
 	return false;
 });

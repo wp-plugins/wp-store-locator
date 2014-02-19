@@ -167,8 +167,17 @@
                         <p>
                            <label for="wpsl-direction-redirect"><?php _e( 'When a user clicks on "Directions", open a new window and show the route on maps.google.com', 'wpsl' ); ?></label> 
                            <input type="checkbox" value="" <?php checked( $this->settings['direction_redirect'] == '1', true ); ?> name="wpsl_design[direction_redirect]" id="wpsl-direction-redirect">
+                        </p>
+                        <p>
+                           <label for="wpsl-more-info"><?php _e( 'Show a "More info" link in the store listings? If a user clicks the link the infowindow in the marker will open.', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['more_info'] == '1', true ); ?> name="wpsl_design[more_info]" id="wpsl-more-info">
+                        </p>
+                        <p>
+                           <label for="wpsl-mouse-focus"><?php _e( 'On pageload move the mousecursor to the input field. **', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['mouse_focus'] == '1', true ); ?> name="wpsl_design[mouse_focus]" id="wpsl-mouse-focus">
                         </p> 
                         <em><?php _e( '* This is the text that is placed before the search input and radius dropdown', 'wpsl' ); ?></em>
+                        <em><?php _e( '** If the store locator is not placed at the top of the page, enabling this feature can result in the page sliding down.', 'wpsl' ); ?></em>
                     </div>        
                 </div>   
             </div>  
@@ -213,6 +222,10 @@
                         <p>
                             <label for="wpsl-results"><?php _e( 'Results:', 'wpsl' ); ?></label> 
                             <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['results_label'] ) ); ?>" name="wpsl_label[results]" class="textinput" id="wpsl-results">
+                        </p>
+                        <p>
+                            <label for="wpsl-more-info"><?php _e( 'More info:', 'wpsl' ); ?></label> 
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['more_label'] ) ); ?>" name="wpsl_label[more]" class="textinput" id="wpsl-more-info">
                         </p>
                         <p>
                             <label for="wpsl-phone"><?php _e( 'Phone:', 'wpsl' ); ?></label> 

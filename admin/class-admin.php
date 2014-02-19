@@ -117,6 +117,28 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                 } 
             }
             
+            if ( version_compare( $current_version, '1.2.11', '<' ) ) {
+                if ( is_array( $this->settings ) ) {
+                    /* Add the default value for the 'more info' link option */
+                    if ( empty( $this->settings['more_info'] ) ) {
+                        $this->settings['more_info'] = 0;
+                        update_option( 'wpsl_settings', $this->settings );
+                    }
+                    
+                    /* Add the default value for the 'more info' label */
+                    if ( empty( $this->settings['more_label'] ) ) {
+                        $this->settings['more_label'] = 'More info';
+                        update_option( 'wpsl_settings', $this->settings );
+                    }
+                    
+                    /* Add the default value mouse focus option */
+                    if ( empty( $this->settings['mouse_focus'] ) ) {
+                        $this->settings['mouse_focus'] = 1;
+                        update_option( 'wpsl_settings', $this->settings );
+                    }	
+                } 
+            }
+            
             update_option( 'wpsl_version', WPSL_VERSION_NUM );
         }
 		
@@ -594,6 +616,8 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             $output['reset_map']          = isset( $_POST['wpsl_design']['reset_map'] ) ? 1 : 0;
             $output['store_below']        = isset( $_POST['wpsl_design']['store_below'] ) ? 1 : 0;
             $output['direction_redirect'] = isset( $_POST['wpsl_design']['direction_redirect'] ) ? 1 : 0;	
+            $output['more_info']          = isset( $_POST['wpsl_design']['more_info'] ) ? 1 : 0;
+            $output['mouse_focus']        = isset( $_POST['wpsl_design']['mouse_focus'] ) ? 1 : 0;
             $output['start_marker'] 	  = wp_filter_nohtml_kses( $_POST['wpsl_map']['start_marker'] );
             $output['store_marker'] 	  = wp_filter_nohtml_kses( $_POST['wpsl_map']['store_marker'] );
 			
@@ -605,6 +629,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 				'radius', 
 				'no_results', 
 				'results', 
+                'more',
 				'directions', 
 				'error', 
 				'phone', 
@@ -616,7 +641,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 			
 			/**
              * Labels can never be empty, so we make sure they always contain data. 
-             * If they are empty, we use the default value 
+             * If they are empty, we use the default value. Otherwise we sanitize the text field
              */
 			foreach ( $required_labels as $k => $label ) {
 				if ( !empty( $_POST['wpsl_label'][$label] ) ) {
@@ -1229,7 +1254,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * @param $location The location
          * @return void
          */
-        private function check_icon_font_usage( $location ) {
+        private function check_icon_font_usage() {
                         
             global $wp_version;
 
@@ -1249,7 +1274,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             wp_enqueue_script( 'jquery-ui-dialog' );
             wp_enqueue_style( 'jquery-style', '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.css' );
 			wp_enqueue_style( 'wpsl-admin-css', plugins_url( '/css/style.css', __FILE__ ), false );
-            $this->check_icon_font_usage( 'footer' );
+            $this->check_icon_font_usage();
 			wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false&libraries=places&language=" . $this->settings['api_language'] ), false ); // we set the language here to make sure the geocode response returns the country name in the correct language
 			wp_enqueue_script( 'wpsl-admin-js', plugins_url( '/js/wpsl-admin.js', __FILE__ ), array( 'jquery' ), false );				
             wp_enqueue_script( 'wpsl-queue', plugins_url( '/js/ajax-queue.js', __FILE__ ), array( 'jquery' ), false ); 

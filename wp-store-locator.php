@@ -5,7 +5,7 @@ Plugin URI:
 Description: An easy to use location management system that enables users to search for nearby physical stores
 Author: Tijmen Smit
 Author URI: http://tijmensmit.com/
-Version: 1.2.1
+Version: 1.2.11
 Text Domain: wpsl
 Domain Path: /languages/
 License: GPLv3
@@ -75,6 +75,8 @@ if ( !class_exists( 'WP_Store_locator' ) ) {
             'reset_map'          => '0',
             'store_below'        => '0',
             'direction_redirect' => '0',
+            'more_info'          => '0',
+            'mouse_focus'        => '1',
             'start_marker'       => 'red.png',
             'store_marker'       => 'blue.png',
             'start_label'        => 'Start location',
@@ -84,6 +86,7 @@ if ( !class_exists( 'WP_Store_locator' ) ) {
             'radius_label'       => 'Search radius',
             'no_results_label'   => 'No results found',
             'results_label'      => 'Results',	
+            'more_label'         => 'More info',	
             'directions_label'   => 'Directions',
             'error_label'        => 'Something went wrong, please try again!',
             'limit_label'        => 'API usage limit reached',
@@ -122,8 +125,8 @@ if ( !class_exists( 'WP_Store_locator' ) ) {
          */
         public function define_constants() {
             
-            if ( !defined( 'WPSL_VERSION_NUM' ) )	
-                define( 'WPSL_VERSION_NUM', '1.2' );
+            if ( !defined( 'WPSL_VERSION_NUM' ) )
+                define( 'WPSL_VERSION_NUM', '1.2.11' );
 
             if ( !defined( 'WPSL_URL' ) )
                 define( 'WPSL_URL', plugin_dir_url( __FILE__ ) );

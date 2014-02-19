@@ -140,6 +140,10 @@ div elements, we disable it to prevent it from messing up the map
     margin-bottom:10px;
 }
 
+#wpsl-result-list a {
+    outline:none;
+}
+
 #wpsl-result-list li {
     padding: 10px;
     border-bottom: 1px dotted #ccc;
@@ -453,7 +457,7 @@ wpsl-search-input.focus,
 }
 
 /* DROP DOWN LIST ITEMS */
-.wpsl-dropdown li{
+#wpsl-wrap .wpsl-dropdown li{
     list-style: none;
     padding: 8px 12px !important;
     margin:0 !important;
@@ -468,8 +472,9 @@ wpsl-search-input.focus,
     color: #000;
 }
 
-.wpsl-dropdown li.active{
+#wpsl-wrap .wpsl-dropdown li.active{
     font-weight: 700;
+    background:none !important;
 }
 
 .clearfix:before,  
