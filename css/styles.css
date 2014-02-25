@@ -29,6 +29,10 @@
     cursor: pointer;
 }
 
+#wpsl-reset-map.wpsl-right-controls {
+    right:42px;
+}
+
 /* 
 Some themes set a box-shadow or max-width for all image / 
 div elements, we disable it to prevent it from messing up the map
@@ -110,6 +114,10 @@ div elements, we disable it to prevent it from messing up the map
 }
 
 /* Result list */
+.wpsl-back {
+    display:block;
+}
+
 #wpsl-result-list {
     float:left; 
     width:33%;
@@ -136,7 +144,6 @@ div elements, we disable it to prevent it from messing up the map
 }
 
 #wpsl-result-list p a {
-    display:block; 
     margin-bottom:10px;
 }
 
@@ -159,6 +166,29 @@ div elements, we disable it to prevent it from messing up the map
     padding-left:0;
     margin-bottom:20px;
 }
+
+.wpsl-store-details.wpsl-store-listing {
+    position:relative;
+    padding-right:20px;
+}
+.wpsl-store-details.wpsl-store-listing:before,
+.wpsl-store-details.wpsl-store-listing.wpsl-active-details:before {
+    position: absolute;
+    content: '';
+    bottom:6px;
+    right:0;
+    border-top: 5px solid #000000;
+    border-left: 6px solid rgba(0, 0, 0, 0);
+    border-right: 6px solid rgba(0, 0, 0, 0);
+}
+
+.wpsl-store-details.wpsl-store-listing.wpsl-active-details:before {
+    border-bottom: 5px solid #000000;
+    border-top:none;
+    border-left: 6px solid rgba(0, 0, 0, 0);
+    border-right: 6px solid rgba(0, 0, 0, 0);   
+}
+
 #wpsl-stores .wpsl-store-thumb {
     float:right;
     border-radius:3px;
@@ -252,8 +282,15 @@ div elements, we disable it to prevent it from messing up the map
 #wpsl-gmap .wpsl-info-window {
     max-width:225px;
 }
+
+.wpsl-more-info-listings span,
 .wpsl-info-window span {
     display:block;
+}
+
+/* More info details in the store listings */
+.wpsl-more-info-listings {
+    display:none;
 }
 
 /* Fix for Google Voice breaking the phone numbers */

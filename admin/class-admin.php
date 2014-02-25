@@ -84,20 +84,19 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                     /* Add the default value for the reset map option */
                     if ( empty( $this->settings['reset_map'] ) ) {
                         $this->settings['reset_map'] = 0;
-                        update_option( 'wpsl_settings', $this->settings );
                     }
 
                     /* Add the default value for the way the store listings are shown, either below or next to the map */
                     if ( empty( $this->settings['auto_load'] ) ) {
                         $this->settings['auto_load'] = 1;
-                        update_option( 'wpsl_settings', $this->settings );
                     }	
                     
                     /* Add the default value for the route redirect */
                     if ( empty( $this->settings['new_window'] ) ) {
                         $this->settings['new_window'] = 0;
-                        update_option( 'wpsl_settings', $this->settings );
-                    }                           
+                    }  
+                    
+                    update_option( 'wpsl_settings', $this->settings );
                 } 
             }
             
@@ -106,14 +105,14 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                     /* Add the default value for the way the store listings are shown, either below or next to the map */
                     if ( empty( $this->settings['store_below'] ) ) {
                         $this->settings['store_below'] = 0;
-                        update_option( 'wpsl_settings', $this->settings );
                     }	
                     
                     /* Add the default value for the route redirect */
                     if ( empty( $this->settings['direction_redirect'] ) ) {
                         $this->settings['direction_redirect'] = 0;
-                        update_option( 'wpsl_settings', $this->settings );
-                    }                           
+                    }    
+                    
+                    update_option( 'wpsl_settings', $this->settings );
                 } 
             }
             
@@ -122,22 +121,47 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                     /* Add the default value for the 'more info' link option */
                     if ( empty( $this->settings['more_info'] ) ) {
                         $this->settings['more_info'] = 0;
-                        update_option( 'wpsl_settings', $this->settings );
                     }
                     
                     /* Add the default value for the 'more info' label */
                     if ( empty( $this->settings['more_label'] ) ) {
                         $this->settings['more_label'] = 'More info';
-                        update_option( 'wpsl_settings', $this->settings );
                     }
                     
                     /* Add the default value mouse focus option */
                     if ( empty( $this->settings['mouse_focus'] ) ) {
                         $this->settings['mouse_focus'] = 1;
-                        update_option( 'wpsl_settings', $this->settings );
                     }	
+                    
+                    update_option( 'wpsl_settings', $this->settings );
                 } 
             }
+            
+             if ( version_compare( $current_version, '1.2.12', '<' ) ) {
+                if ( is_array( $this->settings ) ) {
+                    /* Add the default value for the 'more info link' link option */
+                    if ( empty( $this->settings['more_info_location'] ) ) {
+                        $this->settings['more_info_location'] = 'info window';
+                    }
+                    
+                    /* Add the default value for the back label */
+                    if ( empty( $this->settings['back_label'] ) ) {
+                        $this->settings['back_label'] = 'Back';
+                    }
+                    
+                    /* Add the default value for the reset label */
+                    if ( empty( $this->settings['reset_label'] ) ) {
+                        $this->settings['reset_label'] = 'Reset';
+                    }                  
+                    
+                    /* Add the default value for removing the scroll bar when the store listing is shown below the map */
+                    if ( empty( $this->settings['store_below_scroll'] ) ) {
+                        $this->settings['store_below_scroll'] = '0';
+                    }  
+
+                    update_option( 'wpsl_settings', $this->settings );
+                } 
+            }           
             
             update_option( 'wpsl_version', WPSL_VERSION_NUM );
         }
@@ -508,7 +532,6 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * @return array $output The setting values
          */
 		public function sanitize_settings() {
-            
 			$map_types = array( 
                 'roadmap', 
                 'satellite', 
@@ -522,6 +545,10 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             $distance_units = array( 
                 'km', 
                 'mi' 
+            );
+            $more_info_locations = array( 
+                'store listings',
+                'info window'
             );
 		
 			$output['api_key']      = sanitize_text_field( $_POST['wpsl_api']['key'] );
@@ -615,11 +642,20 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             $output['new_window']         = isset( $_POST['wpsl_design']['new_window'] ) ? 1 : 0;	
             $output['reset_map']          = isset( $_POST['wpsl_design']['reset_map'] ) ? 1 : 0;
             $output['store_below']        = isset( $_POST['wpsl_design']['store_below'] ) ? 1 : 0;
+            $output['store_below_scroll'] = isset( $_POST['wpsl_design']['store_below_scroll'] ) ? 1 : 0;
             $output['direction_redirect'] = isset( $_POST['wpsl_design']['direction_redirect'] ) ? 1 : 0;	
             $output['more_info']          = isset( $_POST['wpsl_design']['more_info'] ) ? 1 : 0;
-            $output['mouse_focus']        = isset( $_POST['wpsl_design']['mouse_focus'] ) ? 1 : 0;
-            $output['start_marker'] 	  = wp_filter_nohtml_kses( $_POST['wpsl_map']['start_marker'] );
-            $output['store_marker'] 	  = wp_filter_nohtml_kses( $_POST['wpsl_map']['store_marker'] );
+
+             /* Check if we have a valid 'more info' location */
+			if ( in_array( $_POST['wpsl_design']['more_info_location'], $more_info_locations ) ) {
+				$output['more_info_location'] = $_POST['wpsl_design']['more_info_location'];
+			} else {
+				$output['more_info_location'] = $this->get_default_setting( 'more_info_location' );
+			}
+
+            $output['mouse_focus']  = isset( $_POST['wpsl_design']['mouse_focus'] ) ? 1 : 0;
+            $output['start_marker'] = wp_filter_nohtml_kses( $_POST['wpsl_map']['start_marker'] );
+            $output['store_marker'] = wp_filter_nohtml_kses( $_POST['wpsl_map']['store_marker'] );
 			
 			$missing_labels = false;
 			$required_labels = array( 
@@ -631,6 +667,8 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 				'results', 
                 'more',
 				'directions', 
+                'back',
+                'reset',
 				'error', 
 				'phone', 
 				'fax', 
@@ -870,7 +908,10 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          */
 		public function show_distance_units() {
             
-			$items = array( 'km', 'mi' );
+			$items = array( 
+                'km', 
+                'mi' 
+            );
 			$dropdown = '<select id="wpsl-distance-unit" name="wpsl_search[distance_unit]">';
 			
 			foreach ( $items as $item => $value ) {
@@ -943,6 +984,30 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 				
 			return $dropdown;
 		}
+        
+        /**
+         * Create a dropdown where users can select location where the 'more info' data is shown
+         *
+         * @since 1.2.12
+         * @return string $dropdown The html for the more info options list
+         */
+		public function show_more_info_options() {
+            
+			$items = array( 
+                'store listings' => 'In the store listings',
+                'info window'    => 'In the info window on the map'
+            );
+			$dropdown = '<select id="wpsl-more-info-list" name="wpsl_design[more_info_location]">';
+			
+			foreach ( $items as $item => $value ) {
+				$selected = ( $this->settings['more_info_location'] == $item ) ? 'selected="selected"' : '';
+				$dropdown .= "<option value='$item' $selected>" . $value . "</option>";
+			}
+			
+			$dropdown .= "</select>";
+			
+			return $dropdown;			
+		}                            
 		
        /**
          * Options for the language and region list

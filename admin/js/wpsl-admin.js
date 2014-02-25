@@ -181,7 +181,7 @@ function filterApiResponse( response ) {
 			country = { 
 				long_name : response[0].address_components[i].long_name,
 				short_name : response[0].address_components[i].short_name
-			}
+			};
 		}
 		
 		/* filter out the postal code */
@@ -389,6 +389,18 @@ function showPreloader( elem ) {
 		elem.after( "<img class='wpsl-preloader' src='" + wpsl_data.url + "img/ajax-loader.gif' />" );
 	}
 }
+
+/* Detect changes for the 'More info' option on the settings page */
+$( "#wpsl-more-info" ).on( "change", function() {
+	$( "#wpsl-more-info-options" ).toggle();
+});
+
+/* Detect changes for the store listings display option, either show below the map or not. 
+ * If so, then show the option to remove the scrollbar
+ */
+$( "#wpsl-store-below" ).on( "change", function() {
+	$( "#wpsl-store-below-scroll" ).toggle();
+});
 
 /* Load the map */
 if ( $( "#wpsl-gmap-wrap" ).length ) {

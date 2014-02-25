@@ -34,8 +34,16 @@ $output .=   '</div>' . "\r\n";
 $output .= '</div>' . "\r\n";
     
 if ( $this->settings['reset_map'] ) { 
+    
+    /* If the control position is set to right, we need to adjust to right space to make sure it doesn't cover map controls.  */
+    if ( $this->settings['control_position'] == 'right' ) {
+        $align_class = 'class="wpsl-right-controls"';
+    } else {
+        $align_class = '';
+    }
+    
     $output .= '<div class="wpsl-gmap-wrap">' . "\r\n";
-    $output .= '<div id="wpsl-reset-map">Reset</div>' . "\r\n";
+    $output .= '<div id="wpsl-reset-map" ' . $align_class . '>' . stripslashes( $this->settings['reset_label'] ) . '</div>' . "\r\n";
     $output .= '<div id="wpsl-gmap"></div>' . "\r\n";
     $output .= '</div>' . "\r\n";
 } else {

@@ -2,7 +2,7 @@
 	<h2>WP Store Locator: <?php _e( 'Settings', 'wpsl' ); ?></h2>
     
     <?php global $wpdb; ?>
-
+    
     <?php settings_errors(); ?>
     <ul id="wpsl-mainnav" class="nav-tab-wrapper">
         <li><a class="nav-tab" href="<?php echo admin_url( 'admin.php?page=wpsl_store_editor' ); ?>"><?php _e( 'Current Stores', 'wpsl' ); ?></a></li>
@@ -18,7 +18,7 @@
                     <div class="inside">
                         <p>
                             <label for="wpsl-api-key"><?php _e( 'API key:', 'wpsl' ); ?> *</label> 
-                            <input type="text" value="<?php echo esc_attr( $this->settings['api_key'] ); ?>" name="wpsl_api[key]" placeholder="<?php _e( 'Optional', 'wpsl' ) ?>" class="textinput" id="wpsl-api-key">
+                            <input type="text" value="<?php echo esc_attr( $this->settings['api_key'] ); ?>" name="wpsl_api[key]" placeholder="<?php _e( 'Optional', 'wpsl' ); ?>" class="textinput" id="wpsl-api-key">
                         </p> 
                         <p>
                             <label for="wpsl-api-language"><?php _e( 'Map language:', 'wpsl' ); ?></label> 
@@ -164,13 +164,21 @@
                            <label for="wpsl-store-below"><?php _e( 'Show the store listings below the map?', 'wpsl' ); ?></label> 
                            <input type="checkbox" value="" <?php checked( $this->settings['store_below'] == '1', true ); ?> name="wpsl_design[store_below]" id="wpsl-store-below">
                         </p>
+                        <p id="wpsl-store-below-scroll" <?php if ( $this->settings['store_below'] == '0' ) { echo 'style="display:none;"'; } ?>>
+                            <label for="wpsl-more-info-list"><?php _e( 'Hide the scrollbar?', 'wpsl' ); ?></label>
+                            <input type="checkbox" value="" <?php checked( $this->settings['store_below_scroll'] == '1', true ); ?> name="wpsl_design[store_below_scroll]" id="wpsl-store-below-scroll">
+                        </p>
                         <p>
                            <label for="wpsl-direction-redirect"><?php _e( 'When a user clicks on "Directions", open a new window and show the route on maps.google.com', 'wpsl' ); ?></label> 
                            <input type="checkbox" value="" <?php checked( $this->settings['direction_redirect'] == '1', true ); ?> name="wpsl_design[direction_redirect]" id="wpsl-direction-redirect">
                         </p>
                         <p>
-                           <label for="wpsl-more-info"><?php _e( 'Show a "More info" link in the store listings? If a user clicks the link the infowindow in the marker will open.', 'wpsl' ); ?></label> 
+                           <label for="wpsl-more-info"><?php _e( 'Show a "More info" link in the store listings?', 'wpsl' ); ?></label> 
                            <input type="checkbox" value="" <?php checked( $this->settings['more_info'] == '1', true ); ?> name="wpsl_design[more_info]" id="wpsl-more-info">
+                        </p>
+                        <p id="wpsl-more-info-options" <?php if ( $this->settings['more_info'] == '0' ) { echo 'style="display:none;"'; } ?>>
+                            <label for="wpsl-more-info-list"><?php _e( 'Where do you want to show the "More info" details?', 'wpsl' ); ?></label>
+                            <?php echo $this->show_more_info_options(); ?>
                         </p>
                         <p>
                            <label for="wpsl-mouse-focus"><?php _e( 'On pageload move the mousecursor to the input field. **', 'wpsl' ); ?></label> 
@@ -247,6 +255,14 @@
                             <label for="wpsl-directions"><?php _e( 'Get directions:', 'wpsl' ); ?></label> 
                             <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['directions_label'] ) ); ?>" name="wpsl_label[directions]" class="textinput" id="wpsl-directions">
                         </p>
+                        <p>
+                            <label for="wpsl-back"><?php _e( 'Back:', 'wpsl' ); ?></label> 
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['back_label'] ) ); ?>" name="wpsl_label[back]" class="textinput" id="wpsl-back">
+                        </p>
+                        <p>
+                            <label for="wpsl-reset"><?php _e( 'Reset:', 'wpsl' ); ?></label> 
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['reset_label'] ) ); ?>" name="wpsl_label[reset]" class="textinput" id="wpsl-reset">
+                        </p>                        
                         <p>
                             <label for="wpsl-error"><?php _e( 'General error:', 'wpsl' ); ?></label> 
                             <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['error_label'] ) ); ?>" name="wpsl_label[error]" class="textinput" id="wpsl-error">

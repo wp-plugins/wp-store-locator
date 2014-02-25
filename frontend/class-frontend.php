@@ -54,7 +54,14 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
          */
 		public function get_custom_css() {	
 			$css  = '<style>' . "\r\n";
-			$css .= "#wpsl-stores, #wpsl-direction-details, #wpsl-gmap {height:" . esc_attr( $this->settings['height'] ) . "px !important;}" . "\r\n";
+			
+            if ( ( $this->settings['store_below'] == '1' ) && ( $this->settings['store_below_scroll'] == '1' ) ) {
+                $css .= "#wpsl-gmap {height:" . esc_attr( $this->settings['height'] ) . "px !important;}" . "\r\n"; 
+                $css .= "#wpsl-stores, #wpsl-direction-details {height:auto !important;}";
+            } else {
+                $css .= "#wpsl-stores, #wpsl-direction-details, #wpsl-gmap {height:" . esc_attr( $this->settings['height'] ) . "px !important;}" . "\r\n";  
+            }
+        
             $css .= "#wpsl-gmap .wpsl-info-window {max-width:" . esc_attr( $this->settings['infowindow_width'] ) . "px !important;}" . "\r\n";
             $css .= ".wpsl-input label, #wpsl-radius label {width:" . esc_attr( $this->settings['label_width'] ) . "px;}" . "\r\n";
             $css .= "#wpsl-search-input {width:" . esc_attr( $this->settings['search_width'] ) . "px !important;}" . "\r\n";
@@ -190,6 +197,7 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
                 'resetMap'          => $this->settings['reset_map'],
                 'directionRedirect' => $this->settings['direction_redirect'],
                 'moreInfo'          => $this->settings['more_info'],
+                'moreInfoLocation'  => $this->settings['more_info_location'],
                 'mouseFocus'        => $this->settings['mouse_focus'],
                 'storeBelow'        => $this->settings['store_below'],
                 'maxResults'        => $dropdown_defaults['max_results'],
@@ -209,7 +217,8 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
 				'phone'        => stripslashes( $this->settings['phone_label'] ),
 				'fax'          => stripslashes( $this->settings['fax_label'] ),
 				'hours'        => stripslashes( $this->settings['hours_label'] ),
-                'startPoint'   => stripslashes( $this->settings['start_label'] )
+                'startPoint'   => stripslashes( $this->settings['start_label'] ),
+                'back'         => stripslashes( $this->settings['back_label'] )
 			);			
 
 			wp_localize_script( 'wpsl-js', 'wpslSettings', $settings );
