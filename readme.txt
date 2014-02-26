@@ -3,7 +3,7 @@ Contributors: tijmensmit
 Tags: google maps, store locator, business locations, geocoding, stores, geo
 Requires at least: 3.5
 Tested up to: 3.8.1
-Stable tag: 1.2.12
+Stable tag: 1.2.13
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -64,6 +64,9 @@ Make sure you don't have any security plugins, or custom functions running that 
 5. Overview from the current stores
 
 == Changelog ==
+
+= 1.2.13 =
+* Fixed the store search not returning any results when the limit results dropdown is hidden
 
 = 1.2.12 =
 * Added an option to choose where the 'More info' details is shown, either in the store listings or on the map

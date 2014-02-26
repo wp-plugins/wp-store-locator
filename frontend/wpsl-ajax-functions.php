@@ -23,7 +23,7 @@ function wpsl_store_search() {
      * The only situation when it can be empty, is when the "Show the limit results dropdown" 
      * checkbox is unchecked on the settings page.
      */
-    if ( !$_GET['max_results'] ) {
+    if ( ( $_GET['max_results'] == 'NaN' ) || ( !$_GET['max_results'] ) ) {
         $max_results = get_default_list_value( $type = 'max_results' );   
     } else {
         $max_results = $_GET['max_results'];
