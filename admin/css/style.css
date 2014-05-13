@@ -9,7 +9,7 @@
 }
 
 #wpsl-store-overview .widefat td.thumb {
-    padding:6px 0 0 8px;
+    padding:9px 0 0 8px;
 }
 
 #wpsl-store-overview .thumb img {
@@ -225,5 +225,10 @@
 }
 
 #wpsl-faq dl {
-    margin-bottom: 17px;	
+    margin-bottom: 25px;	
+}
+
+/* Overview page */
+.wp-list-table .column-action .button {
+    margin:3px 5px 3px 0;
 }

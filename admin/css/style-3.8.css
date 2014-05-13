@@ -27,3 +27,7 @@
 #adminmenu #toplevel_page_wpsl_store_editor .wp-menu-image img {
     display:none;
 }
+
+#wpsl-store-overview .widefat td.thumb {
+    padding-top:8px;
+}

@@ -13,10 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 if ( !class_exists( 'WPSL_Frontend' ) ) {
     /**
-    * Handle the frontend of the store locator
-    *
-    * @since 1.0
-    */
+     * Handle the frontend of the store locator
+     *
+     * @since 1.0
+     */
     class WPSL_Frontend extends WP_Store_locator {
 
         /**
@@ -33,15 +33,12 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
          * @since 1.0
          * @return void
          */
-		public function render_store_locator() {			            
-			
-            if ( $this->settings['store_below'] ) {
-                $output = require_once( WPSL_PLUGIN_DIR . 'frontend/templates/store-listings-below.php' );	
-            } else {
-                $output = require_once( WPSL_PLUGIN_DIR . 'frontend/templates/default.php' );	
-            }
-            
+		public function render_store_locator() {
+
             $this->add_frontend_scripts();
+
+            $template_list = $this->get_templates();
+            $output        = require_once( $template_list[ absint( $this->settings['template_id'] ) ]['path'] );    
             
             return $output;
 		}
@@ -55,7 +52,7 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
 		public function get_custom_css() {	
 			$css  = '<style>' . "\r\n";
 			
-            if ( ( $this->settings['store_below'] == '1' ) && ( $this->settings['store_below_scroll'] == '1' ) ) {
+            if ( ( $this->settings['template_id'] == '1' ) && ( $this->settings['store_below_scroll'] == '1' ) ) {
                 $css .= "#wpsl-gmap {height:" . esc_attr( $this->settings['height'] ) . "px !important;}" . "\r\n"; 
                 $css .= "#wpsl-stores, #wpsl-direction-details {height:auto !important;}";
             } else {
@@ -124,7 +121,7 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
 				}	
 			}
 
-			return $api_data;
+			return apply_filters( 'wpsl_gmap_api_attributes', $api_data );
 		}
         
         /**
@@ -172,17 +169,23 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
          * @since 1.0
          * @return void
          */
-		public function add_frontend_scripts( ) {
+		public function add_frontend_scripts() {
 			wp_enqueue_style( 'wpsl-css', WPSL_URL . 'css/styles.css', false );
             wp_enqueue_script( 'wpsl-dropdown', WPSL_URL.'js/jquery.easydropdown.min.js', array( 'jquery' ) ); //not minified version is in the js folder
-			wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false".$this->get_gmap_api_attributes() ),'' ,'' ,true );
-			wp_enqueue_script( 'wpsl-js', WPSL_URL.'js/wpsl-gmap.js', array( 'jquery' ) );
+            wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false".$this->get_gmap_api_attributes() ),'' ,'' ,true );
+            
+            if ( $this->settings['marker_clusters'] ) {  
+                wp_enqueue_script( 'wpsl-cluster', WPSL_URL . 'js/markerclusterer.min.js' ); //not minified version is in the /js folder
+            }
+            
+            wp_enqueue_script( 'wpsl-js', WPSL_URL.'js/wpsl-gmap.js', array( 'jquery' ) );
             
             $dropdown_defaults = $this->get_dropdown_defaults();
             
 			$settings = array(
                 'startMarker'       => $this->create_retina_filename( $this->settings['start_marker'] ),
                 'storeMarker'       => $this->create_retina_filename( $this->settings['store_marker'] ),
+                'markerClusters'    => $this->settings['marker_clusters'],
 				'autoLocate'        => $this->settings['auto_locate'],
                 'autoLoad'          => $this->settings['auto_load'],
 				'mapType'           => $this->settings['map_type'],
@@ -197,28 +200,42 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
                 'resetMap'          => $this->settings['reset_map'],
                 'directionRedirect' => $this->settings['direction_redirect'],
                 'moreInfo'          => $this->settings['more_info'],
+                'storeUrl'          => $this->settings['store_url'],
+                'phoneUrl'          => $this->settings['phone_url'],
                 'moreInfoLocation'  => $this->settings['more_info_location'],
                 'mouseFocus'        => $this->settings['mouse_focus'],
-                'storeBelow'        => $this->settings['store_below'],
+                'templateId'        => $this->settings['template_id'],
+                'markerStreetView'  => $this->settings['marker_streetview'],
+                'markerZoomTo'      => $this->settings['marker_zoom_to'],
                 'maxResults'        => $dropdown_defaults['max_results'],
                 'searchRadius'      => $dropdown_defaults['search_radius'],
 				'distanceUnit'      => $this->settings['distance_unit'],
 				'ajaxurl'           => admin_url( 'admin-ajax.php' ),
 				'path'              => WPSL_URL,
 			);
-
+            
+            /* If the marker clusters are enabled, include the required script and setting values */
+            if ( $this->settings['marker_clusters'] ) {                
+                $settings['clusterZoom'] = $this->settings['cluster_zoom'];
+                $settings['clusterSize'] = $this->settings['cluster_size'];
+            }
+            
+            /* The __( string, 'wpsl' ) makes the labels accessible in wpml */
 			$labels = array( 
-				'preloader'    => stripslashes( $this->settings['preloader_label'] ),
-				'noResults'    => stripslashes( $this->settings['no_results_label'] ),
-                'moreInfo'     => stripslashes( $this->settings['more_label'] ),
-				'generalError' => stripslashes( $this->settings['error_label'] ),
-				'queryLimit'   => stripslashes( $this->settings['limit_label'] ),
-				'directions'   => stripslashes( $this->settings['directions_label'] ),
-				'phone'        => stripslashes( $this->settings['phone_label'] ),
-				'fax'          => stripslashes( $this->settings['fax_label'] ),
-				'hours'        => stripslashes( $this->settings['hours_label'] ),
-                'startPoint'   => stripslashes( $this->settings['start_label'] ),
-                'back'         => stripslashes( $this->settings['back_label'] )
+				'preloader'         => stripslashes( __( $this->settings['preloader_label'], 'wpsl' ) ),
+				'noResults'         => stripslashes( __( $this->settings['no_results_label'], 'wpsl' ) ),
+                'moreInfo'          => stripslashes( __( $this->settings['more_label'], 'wpsl' ) ),
+				'generalError'      => stripslashes( __( $this->settings['error_label'], 'wpsl' ) ),
+				'queryLimit'        => stripslashes( __( $this->settings['limit_label'], 'wpsl' ) ),
+				'directions'        => stripslashes( __( $this->settings['directions_label'], 'wpsl' ) ),
+                'noDirectionsFound' => stripslashes( __( $this->settings['no_directions_label'], 'wpsl' ) ),
+				'phone'             => stripslashes( __( $this->settings['phone_label'], 'wpsl' ) ),
+				'fax'               => stripslashes( __( $this->settings['fax_label'], 'wpsl' ) ),
+				'hours'             => stripslashes( __( $this->settings['hours_label'], 'wpsl' ) ),
+                'startPoint'        => stripslashes( __( $this->settings['start_label'], 'wpsl' ) ),
+                'back'              => stripslashes( __( $this->settings['back_label'], 'wpsl' ) ),
+                'streetView'        => stripslashes( __( $this->settings['street_view_label'], 'wpsl' ) ),
+                'zoomHere'          => stripslashes( __( $this->settings['zoom_here_label'], 'wpsl' ) )
 			);			
 
 			wp_localize_script( 'wpsl-js', 'wpslSettings', $settings );

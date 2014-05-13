@@ -1,14 +1,13 @@
 <div id="wpsl-wrap" class="wrap wpsl-settings">
 	<h2>WP Store Locator: <?php _e( 'Settings', 'wpsl' ); ?></h2>
     
-    <?php global $wpdb; ?>
+    <?php 
+    global $wpdb;
     
-    <?php settings_errors(); ?>
-    <ul id="wpsl-mainnav" class="nav-tab-wrapper">
-        <li><a class="nav-tab" href="<?php echo admin_url( 'admin.php?page=wpsl_store_editor' ); ?>"><?php _e( 'Current Stores', 'wpsl' ); ?></a></li>
-        <li><a class="nav-tab" href="<?php echo admin_url( 'admin.php?page=wpsl_add_store' ); ?>"><?php _e( 'Add Store', 'wpsl' ); ?></a></li>
-        <li><a class="nav-tab nav-tab-active" href="<?php echo admin_url( 'admin.php?page=wpsl_settings' ); ?>"><?php _e( 'Settings', 'wpsl' ); ?></a></li>
-    </ul>
+    settings_errors();
+    
+    echo $this->create_menu();
+    ?>
                     
     <form id="wpsl-settings-form" method="post" action="options.php" accept-charset="utf-8">
         <div class="postbox-container">
@@ -23,20 +22,16 @@
                         <p>
                             <label for="wpsl-api-language"><?php _e( 'Map language:', 'wpsl' ); ?></label> 
                             <select id="wpsl-api-language" name="wpsl_api[language]">
-                                <?php 
-									echo $this->get_api_option_list( 'language' );
-                                ?>          	
+                                <?php echo $this->get_api_option_list( 'language' ); ?>          	
                             </select>
                         </p>
                         <p>
                             <label for="wpsl-api-region"><?php _e( 'Map region:', 'wpsl' ); ?></label> 
                             <select id="wpsl-api-region" name="wpsl_api[region]">
-                                <?php 
-                                   echo $this->get_api_option_list( 'region' );
-                                ?>          	
+                                <?php echo $this->get_api_option_list( 'region' ); ?>          	
                             </select>
                         </p>
-                        <em><?php _e( '* A valid <a href="https://developers.google.com/maps/documentation/javascript/tutorial#api_key">API key</a> allows you to monitor the API usage <br> and is required if you need to purchase additional quota.', 'wpsl' ); ?></em>
+                        <em><?php echo sprintf( __( '* A valid <a href="%s">API key</a> allows you to monitor the API usage <br> and is required if you need to purchase additional quota.', 'wpsl' ), 'https://developers.google.com/maps/documentation/javascript/tutorial#api_key' ); ?></em>
                     </div>        
                 </div>   
             </div>  
@@ -61,7 +56,7 @@
                         </p>
                         <p>
                            <label for="wpsl-bounce"><?php _e( 'If a user hovers over the search results, the corresponding marker will bounce?', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['marker_bounce'] == '1', true ); ?> name="wpsl_map[marker_bounce]" id="wpsl-bounce">
+                           <input type="checkbox" value="" <?php checked( $this->settings['marker_bounce'], true ); ?> name="wpsl_map[marker_bounce]" id="wpsl-bounce">
                         </p>   
                         <em><?php _e( '* The default value is set between the ( )', 'wpsl' ); ?></em>
                     </div>        
@@ -76,11 +71,11 @@
                     <div class="inside">
                         <p>
                            <label for="wpsl-auto-locate"><?php _e( 'Attempt to auto-locate the user:', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['auto_locate'] == '1', true ); ?> name="wpsl_map[auto_locate]" id="wpsl-auto-locate">
+                           <input type="checkbox" value="" <?php checked( $this->settings['auto_locate'], true ); ?> name="wpsl_map[auto_locate]" id="wpsl-auto-locate">
                         </p>
                         <p>
                            <label for="wpsl-auto-load"><?php _e( 'Load all stores on page load:', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['auto_load'] == '1', true ); ?> name="wpsl_map[auto_load]" id="wpsl-auto-locate">
+                           <input type="checkbox" value="" <?php checked( $this->settings['auto_load'], true ); ?> name="wpsl_map[auto_load]" id="wpsl-auto-locate">
                         </p> 
                         <p>
                             <label for="wpsl-zoom-name"><?php _e( 'Start point: *', 'wpsl' ); ?></label> 
@@ -97,11 +92,11 @@
                         </p>
                         <p>
                            <label for="wpsl-streetview"><?php _e( 'Show the street view controls?', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['streetview'] == '1', true ); ?> name="wpsl_map[streetview]" id="wpsl-streetview">
+                           <input type="checkbox" value="" <?php checked( $this->settings['streetview'], true ); ?> name="wpsl_map[streetview]" id="wpsl-streetview">
                         </p>
                         <p>
                            <label for="wpsl-pan-controls"><?php _e( 'Show the pan controls?', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['pan_controls'] == '1', true ); ?> name="wpsl_map[pan_controls]" id="wpsl-pan-controls">
+                           <input type="checkbox" value="" <?php checked( $this->settings['pan_controls'], true ); ?> name="wpsl_map[pan_controls]" id="wpsl-pan-controls">
                         </p> 
                         <p>
                             <label><?php _e( 'Position of the map controls:', 'wpsl' ); ?></label>
@@ -149,40 +144,56 @@
                             <input size="3" value="<?php echo esc_attr( $this->settings['label_width'] ); ?>" id="wpsl-label-width" name="wpsl_design[label_width]"> px
                         </p> 
                         <p>
+                           <label for="wpsl-store-template"><?php _e( 'Select template', 'wpsl' ); ?></label> 
+                           <?php echo $this->show_template_options(); ?>
+                        </p>
+                        <p id="wpsl-store-below-scroll" <?php if ( $this->settings['template_id'] != '1' ) { echo 'style="display:none;"'; } ?>>
+                            <label for="wpsl-more-info-list"><?php _e( 'Hide the scrollbar?', 'wpsl' ); ?></label>
+                            <input type="checkbox" value="" <?php checked( $this->settings['store_below_scroll'], true ); ?> name="wpsl_design[store_below_scroll]" id="wpsl-store-below-scroll">
+                        </p>
+                        <p>
                            <label for="wpsl-design-results"><?php _e( 'Show the limit results dropdown?', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['results_dropdown'] == '1', true ); ?> name="wpsl_design[design_results]">
+                           <input type="checkbox" value="" <?php checked( $this->settings['results_dropdown'], true ); ?> name="wpsl_design[design_results]">
                         </p>
                         <p>
                            <label for="wpsl-new-window"><?php _e( 'Open links in a new window?', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['new_window'] == '1', true ); ?> name="wpsl_design[new_window]" id="wpsl-new-window">
+                           <input type="checkbox" value="" <?php checked( $this->settings['new_window'], true ); ?> name="wpsl_design[new_window]" id="wpsl-new-window">
                         </p>
                         <p>
                            <label for="wpsl-reset-map"><?php _e( 'Show a reset map button?', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['reset_map'] == '1', true ); ?> name="wpsl_design[reset_map]" id="wpsl-reset-map">
+                           <input type="checkbox" value="" <?php checked( $this->settings['reset_map'], true ); ?> name="wpsl_design[reset_map]" id="wpsl-reset-map">
                         </p> 
                         <p>
-                           <label for="wpsl-store-below"><?php _e( 'Show the store listings below the map?', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['store_below'] == '1', true ); ?> name="wpsl_design[store_below]" id="wpsl-store-below">
-                        </p>
-                        <p id="wpsl-store-below-scroll" <?php if ( $this->settings['store_below'] == '0' ) { echo 'style="display:none;"'; } ?>>
-                            <label for="wpsl-more-info-list"><?php _e( 'Hide the scrollbar?', 'wpsl' ); ?></label>
-                            <input type="checkbox" value="" <?php checked( $this->settings['store_below_scroll'] == '1', true ); ?> name="wpsl_design[store_below_scroll]" id="wpsl-store-below-scroll">
-                        </p>
-                        <p>
                            <label for="wpsl-direction-redirect"><?php _e( 'When a user clicks on "Directions", open a new window and show the route on maps.google.com', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['direction_redirect'] == '1', true ); ?> name="wpsl_design[direction_redirect]" id="wpsl-direction-redirect">
+                           <input type="checkbox" value="" <?php checked( $this->settings['direction_redirect'], true ); ?> name="wpsl_design[direction_redirect]" id="wpsl-direction-redirect">
                         </p>
                         <p>
                            <label for="wpsl-more-info"><?php _e( 'Show a "More info" link in the store listings?', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['more_info'] == '1', true ); ?> name="wpsl_design[more_info]" id="wpsl-more-info">
-                        </p>
+                           <input type="checkbox" value="" <?php checked( $this->settings['more_info'], true ); ?> name="wpsl_design[more_info]" id="wpsl-more-info">
+                        </p>                        
                         <p id="wpsl-more-info-options" <?php if ( $this->settings['more_info'] == '0' ) { echo 'style="display:none;"'; } ?>>
                             <label for="wpsl-more-info-list"><?php _e( 'Where do you want to show the "More info" details?', 'wpsl' ); ?></label>
                             <?php echo $this->show_more_info_options(); ?>
                         </p>
                         <p>
+                           <label for="wpsl-store-url"><?php _e( 'If a store url exists, make the store name clickable?', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['store_url'], true ); ?> name="wpsl_design[store_url]" id="wpsl-store-url">
+                        </p>
+                        <p>
+                           <label for="wpsl-phone-url"><?php _e( 'Make the phone number clickable on mobile devices?', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['phone_url'], true ); ?> name="wpsl_design[phone_url]" id="wpsl-phone-url">
+                        </p>
+                        <p>
+                           <label for="wpsl-marker-streetview"><?php _e( 'If available for the current location, show a link to enable street view from the infowindow?', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['marker_streetview'], true ); ?> name="wpsl_design[marker_streetview]" id="wpsl-marker-streetview">
+                        </p>
+                        <p>
+                           <label for="wpsl-marker-zoom-to"><?php _e( 'Show a "zoom to" link in the infowindow?', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['marker_zoom_to'], true ); ?> name="wpsl_design[marker_zoom_to]" id="wpsl-marker-zoom-to">
+                        </p>
+                        <p>
                            <label for="wpsl-mouse-focus"><?php _e( 'On pageload move the mousecursor to the input field. **', 'wpsl' ); ?></label> 
-                           <input type="checkbox" value="" <?php checked( $this->settings['mouse_focus'] == '1', true ); ?> name="wpsl_design[mouse_focus]" id="wpsl-mouse-focus">
+                           <input type="checkbox" value="" <?php checked( $this->settings['mouse_focus'], true ); ?> name="wpsl_design[mouse_focus]" id="wpsl-mouse-focus">
                         </p> 
                         <em><?php _e( '* This is the text that is placed before the search input and radius dropdown', 'wpsl' ); ?></em>
                         <em><?php _e( '** If the store locator is not placed at the top of the page, enabling this feature can result in the page sliding down.', 'wpsl' ); ?></em>
@@ -197,6 +208,33 @@
                     <h3><span><?php _e( 'Markers', 'wpsl' ); ?></span></h3>
                     <div class="inside">
                         <?php echo $this->show_marker_options(); ?>
+                        <p>
+                           <label for="wpsl-marker-clusters"><?php _e( 'Enable marker clusters? *', 'wpsl' ); ?></label> 
+                           <input type="checkbox" value="" <?php checked( $this->settings['marker_clusters'], true ); ?> name="wpsl_map[marker_clusters]" id="wpsl-marker-clusters">
+                        </p>
+                        <p class="wpsl-cluster-options" <?php if ( !$this->settings['marker_clusters'] ) { echo 'style="display:none;"'; } ?>>
+                           <label for="wpsl-marker-zoom"><?php _e( 'Max zoom level:', 'wpsl' ); ?></label> 
+                           <?php echo $this->show_cluster_options( 'cluster_zoom' ); ?>
+                        </p>
+                        <p class="wpsl-cluster-options" <?php if ( !$this->settings['marker_clusters'] ) { echo 'style="display:none;"'; } ?>>
+                           <label for="wpsl-marker-cluster-size"><?php _e( 'Cluster size:', 'wpsl' ); ?></label> 
+                           <?php echo $this->show_cluster_options( 'cluster_size' ); ?>
+                        </p>
+                       <em><?php _e( '* Recommended for maps with a large amounts of markers.', 'wpsl' ); ?></em>
+                    </div>
+                </div>   
+            </div>  
+        </div>
+        
+        <div class="postbox-container">
+            <div class="metabox-holder">
+                <div class="postbox">
+                    <h3><span><?php _e( 'Store Editor Settings', 'wpsl' ); ?></span></h3>
+                    <div class="inside">
+                        <p>
+                            <label for="wpsl-editor-country"><?php _e( 'Default country that will be used on the "Add Store" page.', 'wpsl' ); ?></label> 
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['editor_country'] ) ); ?>" name="wpsl_editor[default_country]" class="textinput" id="wpsl-editor-country">
+                        </p>
                     </div>        
                 </div>   
             </div>  
@@ -256,13 +294,25 @@
                             <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['directions_label'] ) ); ?>" name="wpsl_label[directions]" class="textinput" id="wpsl-directions">
                         </p>
                         <p>
+                            <label for="wpsl-no-directions"><?php _e( 'No directions found:', 'wpsl' ); ?></label> 
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['no_directions_label'] ) ); ?>" name="wpsl_label[no_directions]" class="textinput" id="wpsl-no-directions">
+                        </p>
+                        <p>
                             <label for="wpsl-back"><?php _e( 'Back:', 'wpsl' ); ?></label> 
                             <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['back_label'] ) ); ?>" name="wpsl_label[back]" class="textinput" id="wpsl-back">
                         </p>
                         <p>
                             <label for="wpsl-reset"><?php _e( 'Reset:', 'wpsl' ); ?></label> 
                             <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['reset_label'] ) ); ?>" name="wpsl_label[reset]" class="textinput" id="wpsl-reset">
-                        </p>                        
+                        </p>
+                        <p>
+                            <label for="wpsl-street-view"><?php _e( 'Street view:', 'wpsl' ); ?></label> 
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['street_view_label'] ) ); ?>" name="wpsl_label[street_view]" class="textinput" id="wpsl-street-view">
+                        </p> 
+                        <p>
+                            <label for="wpsl-zoom-here"><?php _e( 'Zoom here:', 'wpsl' ); ?></label> 
+                            <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['zoom_here_label'] ) ); ?>" name="wpsl_label[zoom_here]" class="textinput" id="wpsl-zoom-here">
+                        </p>
                         <p>
                             <label for="wpsl-error"><?php _e( 'General error:', 'wpsl' ); ?></label> 
                             <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['error_label'] ) ); ?>" name="wpsl_label[error]" class="textinput" id="wpsl-error">
@@ -271,7 +321,7 @@
                             <label for="wpsl-limit"><?php _e( 'Query limit error:', 'wpsl' ); ?> *</label> 
                             <input type="text" value="<?php echo esc_attr( stripslashes( $this->settings['limit_label'] ) ); ?>" name="wpsl_label[limit]" class="textinput" id="wpsl-limit">
                         </p>
-                        <em><?php _e( '* You can raise the <a href="https://developers.google.com/maps/documentation/javascript/usage#usage_limits">usage limit</a> by obtaining an API <a href="https://developers.google.com/maps/documentation/javascript/tutorial#api_key">key</a>, <br> and fill in the "API key" field at the top of this page.', 'wpsl' ); ?></em>
+                        <em><?php echo sprintf( __( '* You can raise the <a href="%s">usage limit</a> by obtaining an API <a href="%s">key</a>, <br> and fill in the "API key" field at the top of this page.', 'wpsl' ), 'https://developers.google.com/maps/documentation/javascript/usage#usage_limits', 'https://developers.google.com/maps/documentation/javascript/tutorial#api_key' ); ?></em>
                     </div>        
                 </div>   
             </div>  

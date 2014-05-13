@@ -18,21 +18,24 @@ function wpsl_store_search() {
 
     $options       = get_option( 'wpsl_settings' );
     $distance_unit = ( $options['distance_unit'] == 'km' ) ? '6371' : '3959'; 
-        
-    /* If no max results is set, we get the default value from the settings. 
-     * The only situation when it can be empty, is when the "Show the limit results dropdown" 
-     * checkbox is unchecked on the settings page.
-     */
-    if ( ( $_GET['max_results'] == 'NaN' ) || ( !$_GET['max_results'] ) ) {
-        $max_results = get_default_list_value( $type = 'max_results' );   
-    } else {
-        $max_results = $_GET['max_results'];
-    }
     
     /* Check if we need to include the distance and radius limit in the sql query. 
      * If autoload is enabled we load all stores, so no limits required. 
      */
-    if ( !$_GET['autoload'] ) {
+    if ( isset( $_GET['autoload'] ) && ( $_GET['autoload'] == 1 ) ) {
+        $sql_part = ' ORDER BY distance';
+        $placeholders = array(
+             $_GET["lat"], 
+             $_GET["lng"], 
+             $_GET["lat"]
+         );
+    } else {
+        $max_results = ( isset( $_GET['max_results'] ) ) ? $_GET['max_results'] : '';
+    
+        if ( ( $max_results == 'NaN' ) || ( !$max_results ) ) {
+            $max_results = get_default_list_value( $type = 'max_results' );   
+        }
+        
         $sql_part = ' HAVING distance < %d ORDER BY distance LIMIT 0, %d';
         $placeholders = array(
             $_GET["lat"], 
@@ -40,14 +43,7 @@ function wpsl_store_search() {
             $_GET["lat"],
             $_GET["radius"], 
             $max_results
-        );
-    } else {
-       $sql_part = ' ORDER BY distance';
-       $placeholders = array(
-            $_GET["lat"], 
-            $_GET["lng"], 
-            $_GET["lat"]
-        ); 
+        );  
     }
 
     $result = $wpdb->get_results( 
@@ -78,7 +74,8 @@ function wpsl_store_search() {
 			$store_results[] = array (
 				'id'          => absint( $result[$k]->wpsl_id ),
 				'store'       => sanitize_text_field( stripslashes( $result[$k]->store ) ),
-				'street'      => sanitize_text_field( stripslashes( $result[$k]->street ) ),
+				'address'     => sanitize_text_field( stripslashes( $result[$k]->address ) ),
+                'address2'    => sanitize_text_field( stripslashes( $result[$k]->address2 ) ),
 				'city'        => sanitize_text_field( stripslashes( $result[$k]->city ) ),
 				'state'       => sanitize_text_field( stripslashes( $result[$k]->state ) ),
 				'zip'         => sanitize_text_field( stripslashes( $result[$k]->zip ) ),
@@ -111,7 +108,7 @@ function wpsl_store_search() {
  */
 function get_default_list_value( $type ) {
 
-    $settings = get_option( 'wpsl_settings' );
+    $settings    = get_option( 'wpsl_settings' );
     $list_values = explode( ',', $settings[$type] );
 
     foreach ( $list_values as $k => $list_value ) {

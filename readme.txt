@@ -2,12 +2,12 @@
 Contributors: tijmensmit
 Tags: google maps, store locator, business locations, geocoding, stores, geo
 Requires at least: 3.5
-Tested up to: 3.8.1
-Stable tag: 1.2.13
+Tested up to: 3.9.1
+Stable tag: 1.2.20
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
-An easy to use location management system that enables users to search for nearby physical stores
+An easy to use location management system that enables users to search for nearby physical stores.
 
 == Description ==
 
@@ -28,6 +28,7 @@ the language that is set in the admin panel.
 * Show Google Maps in different languages, this also influences the language for the driving directions
 * Show the driving directions to the stores 
 * Users can filter the returned results by radius or max results
+* Supports the clustering of markers
 * Customize the max results and search radius values that users can select
 * Customize map settings like the terrain type, location of the map controls and the default zoom level
 * Auto-locate the location of the user and show nearby stores
@@ -48,11 +49,23 @@ Add this shortcode [wpsl] to the page where you want to display the store locato
 
 = The map doesn't display properly. It's either broken in half or doesn't load at all. =
 
-Make sure you have defined a start point for the map under settings -> map settings
+Make sure you have defined a start point for the map under settings -> Map Settings.
 
 = I get an error saying the 'sensor' parameter specified in the request must be set to either 'true' or 'false' =
 
 Make sure you don't have any security plugins, or custom functions running that strip away version numbers from file paths.
+
+= Why does it show the location I searched for in the wrong country? =
+
+Some location names exist in more then one country, and Google will guess which one you mean. This can be fixed by setting the correct 'Map Region' on the settings page -> API Settings.
+
+= The store locator doesn't load, it only shows the number 1? =
+
+This is most likely caused by your theme using ajax navigation ( the loading of content without reloading the page ), or a conflict with another plugin. Try to disable the ajax navigation in the theme settings, or deactivate the plugin that enables it to see if that solves the problem.
+
+If you don't use ajax navigation, but do see the number 1 it's probably a conflict with another plugin. Try to disable the plugins one by one to see if one of them is causing a conflict.
+
+If you find a plugin or theme that causes a conflict, please report it on the [support page](http://wordpress.org/support/plugin/wp-store-locator).
 
 
 == Screenshots ==
@@ -64,6 +77,35 @@ Make sure you don't have any security plugins, or custom functions running that 
 5. Overview from the current stores
 
 == Changelog ==
+
+= 1.2.20 =
+* Fixed the directions url sometimes showing an incomplete address due to an encoding issue
+* Fixed the 'items' count on the store overview page showing the incorrect number after deleting a store
+* Fixed the autocomplete for the 'start point' field sometimes not working on the settings page
+* Fixed php notices breaking the store search when wp_debug is set to true
+* Fixed the bulk actions when set to 'Bulk Actions' showing the full store list without paging
+* Fixed small css alignment issues in the admin area
+* Fixed the js script still trying to load store data when autoload was disabled
+* Fixed the clickable area around the marker being to big
+* Improved: After a user clicks on 'directions' and then clicks 'back', the map view is returned to the original location
+* Removed: the 'Preview location on the map' button no longer updates the zip code value it receives from the Google Maps API
+* Changed the way the dropdown filters are handled on mobile devices. They are now styled and behave according to the default UI of the device
+* Added support for WP Multisite
+* Added 'Screen Options' for the 'Current Stores' page, so you can define the amount of stores that are visible on a single page
+* Added the option to make phone numbers clickable on mobile devices by adding a link around them with 'tel:'
+* Added the option to make store names automatically clickable if the store url exists
+* Added the option to show a 'zoom here' and 'street view' (when available) into the infowindow
+* Added a second address field to the store fields
+* Added the option to enable marker clusters
+* Added the option to set a default country for the "Add Store" page
+* Added Dutch (nl_NL) translations
+* Added a .pot file to the languages folder for translators
+* Added error handling for the driving directions
+* Added several filters for developers: 
+'wpsl_templates' for loading a custom template from another directory
+'wpsl_menu_position' for adjusting the position of the store locator menu in the admin panel
+'wpsl_capability' to manually set the required user capability for adding/editing stores
+'wpsl_gmap_api_attributes' to modify the Google maps parameters ( change the map language dynamically )
 
 = 1.2.13 =
 * Fixed the store search not returning any results when the limit results dropdown is hidden

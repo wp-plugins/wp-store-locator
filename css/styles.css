@@ -306,8 +306,18 @@ div elements, we disable it to prevent it from messing up the map
 .wpsl-store-hours strong {
     display:block;
 }
-.wpsl-info-window .wpsl-directions {
-    margin:10px 0;
+
+.wpsl-info-actions {
+    display:block;
+    margin:10px 0;   
+}
+    .wpsl-info-actions a {
+        float:left;
+        margin-right: 7px;
+    }
+
+.wpsl-zoom-here {
+    margin-right:0;
 }
 
 /* --- EASYDROPDOWN DEFAULT THEME --- */
@@ -501,7 +511,6 @@ wpsl-search-input.focus,
 }
 
 /* .focus class is also added on hover */
-
 .wpsl-dropdown li.focus{
     background: #f8f9f8;
     position: relative;
@@ -530,6 +539,8 @@ wpsl-search-input.focus,
 .wpsl-input, .wpsl-select-wrap {
     margin-bottom:10px;
 }
+
+/*  */
 
 @media (max-width: 825px) {
     #wpsl-search-input {

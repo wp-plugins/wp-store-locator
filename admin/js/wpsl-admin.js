@@ -12,7 +12,7 @@ function initializeGmap() {
 		};
 
 	geocoder = new google.maps.Geocoder();
-	map = new google.maps.Map( document.getElementById( "wpsl-gmap-wrap" ), myOptions );
+	map		 = new google.maps.Map( document.getElementById( "wpsl-gmap-wrap" ), myOptions );
 	
 	checkEditStoreMarker();
 }
@@ -74,21 +74,10 @@ function geocodeDraggedPosition( pos ) {
 	}, function ( response ) {
 		if ( response && response.length > 0 ) {
 			setLatlng( response[0].geometry.location, "store" );
-
-			/* Set the zip code, but only if no existing value exists */
-			setZipCode( response );
 		} else {
-			alert( "Cannot determine address at this location." );
+			alert( wpslL10n.noAddress );
 		}
 	});
-}
-
-/* Only update the zipcode if there is no existing value */
-function setZipCode( response ) {
-	if ( !$( "#wpsl-store-zip" ).val() ) {
-		var filteredResponse = filterApiResponse( response );
-		$( "#wpsl-store-zip" ).val( filteredResponse.zip );
-	}	
 }
 
 /* Lookup the provided location name with the Google Maps API */
@@ -100,15 +89,15 @@ $( "#wpsl-lookup-location" ).on( "click", function() {
 /* Geocode the user input */ 
 function codeAddress() {
     var filteredResponse,
-		street = $( "#wpsl-store-street" ).val(),
+		address = $( "#wpsl-store-address" ).val(),
 		city = $( "#wpsl-store-city" ).val(),
 		zip = $( "#wpsl-store-zip" ).val(),
 		country = $( "#wpsl-store-country" ).val(),
-		address = street + ',' + city + ',' + zip + ',' + country;
+		fullAddress = address + ',' + city + ',' + zip + ',' + country;
 		
 		/* Check we have all the requird data before attempting to geocode the address */
-		if ( !validatePreviewFields( street, city, zip, country ) ) {
-			geocoder.geocode( { 'address': address }, function( response, status ) {
+		if ( !validatePreviewFields( address, city, zip, country ) ) {
+			geocoder.geocode( { 'address': fullAddress }, function( response, status ) {
 				if ( status === google.maps.GeocoderStatus.OK ) {
 					
 					/* If we have a previous marker on the map remove it */
@@ -126,24 +115,23 @@ function codeAddress() {
 					setLatlng( response[0].geometry.location, "store" );
 
 					filteredResponse = filterApiResponse( response );
-					$( "#wpsl-store-zip" ).val( filteredResponse.zip );
 					$( "#wpsl-store-country" ).val( filteredResponse.country.long_name );
 					$( "#wpsl-country-iso" ).val( filteredResponse.country.short_name );
 				} else {
-					alert( "Geocode was not successful for the following reason: " + status );
+					alert( wpslL10n.geocodeFail + ' ' + status );
 				}
 			});
 		}
 }
 
 /* Check that all required fields for the preview to work are there */
-function validatePreviewFields( street, city, zip, country ) {
+function validatePreviewFields( address, city, zip, country ) {
 	var error = false;
 	
 	$( "#wpsl-wrap input" ).removeClass( "wpsl-error" );
 		
-	if ( !street ) {
-		$( "#wpsl-store-street" ).addClass( "wpsl-error" );
+	if ( !address ) {
+		$( "#wpsl-store-address" ).addClass( "wpsl-error" );
 		error = true;
 	}
 	
@@ -167,7 +155,7 @@ function validatePreviewFields( street, city, zip, country ) {
 
 /* Filter out the zipcode from the Google Maps API response */
 function filterApiResponse( response ) {
-	var zipcode, responseType,
+	var responseType,
 		country = {},
 		collectedData = {},
 		addressLength = response[0].address_components.length;
@@ -183,15 +171,9 @@ function filterApiResponse( response ) {
 				short_name : response[0].address_components[i].short_name
 			};
 		}
-		
-		/* filter out the postal code */
-		if ( ( /^postal_code$/.test( responseType ) ) || ( /^postal_code_prefix,postal_code$/.test( responseType ) ) ) {
-			zipcode = response[0].address_components[i].long_name;
-		}
 	}
 	
 	collectedData = {
-		zip : zipcode,
 		country : country
 	};
 	
@@ -295,8 +277,8 @@ $( ".wpsl-delete-store-btn" ).removeAttr( "disabled" );
 $( "#wpsl-store-overview" ).on( "click", ".wpsl-delete-store-btn", function() {	
 	var elem = $(this),
 		dialogBox = $( "#wpsl-delete-confirmation" ),
-		cancelBtn =  dialogBox.find( ".button-secondary" ),
-		submitBtn =  dialogBox.find( ".button-primary" );
+		cancelBtn = dialogBox.find( ".button-secondary" ),
+		submitBtn = dialogBox.find( ".button-primary" );
 
 	dialogBox.dialog({
 		width: 325,
@@ -345,13 +327,18 @@ function deleteStore( elem ) {
 		if ( response === -1 ) {
 			elem.removeAttr( "disabled" );
 			$( ".wpsl-preloader" ).remove();
-			alert( "Security check failed, reload the page and try again." );
+			alert( wpslL10n.securityFail );
 		} else if ( response.success ) {
+			
+			/* Remove the deleted store row */
 			setTimeout( function() {
 				$parentTr.fadeOut( "200", function() {
 					$parentTr.remove();
+					
+					/* Update the remaining store count */
+					updateStoreCount();
 				});
-			}, 2000);
+			}, 2000);			
 		}
 	});	
 }
@@ -395,12 +382,39 @@ $( "#wpsl-more-info" ).on( "change", function() {
 	$( "#wpsl-more-info-options" ).toggle();
 });
 
-/* Detect changes for the store listings display option, either show below the map or not. 
- * If so, then show the option to remove the scrollbar
+/* Detect changes to the store template dropdown. If the template is selected to 
+ * show the store list under the map then we show the option to hide the scrollbar.
  */
-$( "#wpsl-store-below" ).on( "change", function() {
-	$( "#wpsl-store-below-scroll" ).toggle();
+$( "#wpsl-store-template" ).on( "change", function() {
+	var $scrollOption = $( "#wpsl-store-below-scroll" );
+	
+	if ( $( "#wpsl-store-template" ).val() == "1" ) {
+		$scrollOption.show();
+	} else {
+		$scrollOption.hide();
+	}
 });
+
+/* If the marker cluster checkbox changes, show/hide the options */
+$( "#wpsl-marker-clusters" ).on( "change", function() {
+	$( ".wpsl-cluster-options" ).toggle();
+});
+
+/**
+ * When a store is deleted, update the store count that is 
+ * shown above and below the store overview list
+ * 
+ * @since 1.2.20
+ * @return void
+ */
+function updateStoreCount() {
+	var pageNum = $( ".tablenav.top .displaying-num" ).text(),
+		pageNum = pageNum.split( " " );
+	
+	if ( !isNaN( parseInt( pageNum[0] ) ) ) {
+		$( ".tablenav .displaying-num" ).text( pageNum[0]-1 + ' ' + pageNum[1] );
+	}
+}
 
 /* Load the map */
 if ( $( "#wpsl-gmap-wrap" ).length ) {

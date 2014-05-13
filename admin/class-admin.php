@@ -62,7 +62,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                     add_action( 'admin_footer', array( $this, 'show_location_warning' ) );
                 }
             }
-            
+                        
             register_setting( 'wpsl_settings', 'wpsl_settings', array( $this, 'sanitize_settings' ) );
 		}
         
@@ -125,7 +125,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                     
                     /* Add the default value for the 'more info' label */
                     if ( empty( $this->settings['more_label'] ) ) {
-                        $this->settings['more_label'] = 'More info';
+                        $this->settings['more_label'] = __( 'More info', 'wpsl' );
                     }
                     
                     /* Add the default value mouse focus option */
@@ -137,31 +137,95 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                 } 
             }
             
-             if ( version_compare( $current_version, '1.2.12', '<' ) ) {
+            if ( version_compare( $current_version, '1.2.12', '<' ) ) {
                 if ( is_array( $this->settings ) ) {
                     /* Add the default value for the 'more info link' link option */
                     if ( empty( $this->settings['more_info_location'] ) ) {
-                        $this->settings['more_info_location'] = 'info window';
+                        $this->settings['more_info_location'] = __( 'info window', 'wpsl' ); 
                     }
-                    
+
                     /* Add the default value for the back label */
                     if ( empty( $this->settings['back_label'] ) ) {
-                        $this->settings['back_label'] = 'Back';
+                        $this->settings['back_label'] = __( 'Back', 'wpsl' );
                     }
-                    
+
                     /* Add the default value for the reset label */
                     if ( empty( $this->settings['reset_label'] ) ) {
-                        $this->settings['reset_label'] = 'Reset';
+                        $this->settings['reset_label'] = __( 'Reset', 'wpsl' );
                     }                  
-                    
+
                     /* Add the default value for removing the scroll bar when the store listing is shown below the map */
                     if ( empty( $this->settings['store_below_scroll'] ) ) {
-                        $this->settings['store_below_scroll'] = '0';
+                        $this->settings['store_below_scroll'] = 0;
                     }  
 
                     update_option( 'wpsl_settings', $this->settings );
                 } 
-            }           
+            }   
+            
+            if ( version_compare( $current_version, '1.2.20', '<' ) ) {
+                
+                global $wpdb;
+            
+                /* Rename the street field to address */
+                $wpdb->query( "ALTER TABLE $wpdb->wpsl_stores CHANGE street address VARCHAR(255)" );
+
+                /* Add the second address field */
+                $wpdb->query( "ALTER TABLE $wpdb->wpsl_stores ADD address2 VARCHAR(255) NULL AFTER address" );
+                
+                if ( is_array( $this->settings ) ) {
+                    if ( empty( $this->settings['store_url'] ) ) {
+                        $this->settings['store_url'] = 0;
+                    }
+
+                    if ( empty( $this->settings['phone_url'] ) ) {
+                        $this->settings['phone_url'] = 0;
+                    }
+                    
+                    if ( empty( $this->settings['marker_clusters'] ) ) {
+                        $this->settings['marker_clusters'] = 0;
+                    }
+                    
+                    if ( empty( $this->settings['cluster_zoom'] ) ) {
+                        $this->settings['cluster_zoom'] = 0;
+                    }
+                    
+                    if ( empty( $this->settings['cluster_size'] ) ) {
+                        $this->settings['cluster_size'] = 0;
+                    }
+                    
+                    if ( empty( $this->settings['template_id'] ) ) {
+                        $this->settings['template_id'] = ( $this->settings['store_below'] ) ? 1 : 0;
+                        unset( $this->settings['store_below'] );
+                    }
+                    
+                    if ( empty( $this->settings['marker_streetview'] ) ) {
+                        $this->settings['marker_streetview'] = 0;
+                    }
+                    
+                    if ( empty( $this->settings['marker_zoom_to'] ) ) {
+                        $this->settings['marker_zoom_to'] = 0;
+                    }
+                    
+                    if ( !isset( $this->settings['editor_country'] ) ) {
+                        $this->settings['editor_country'] = '';
+                    }
+                    
+                    if ( empty( $this->settings['street_view_label'] ) ) {
+                        $this->settings['street_view_label'] = __( 'Street view', 'wpsl' );
+                    }
+                    
+                    if ( empty( $this->settings['zoom_here_label'] ) ) {
+                        $this->settings['zoom_here_label'] = __( 'Zoom here', 'wpsl' );
+                    }
+                    
+                    if ( empty( $this->settings['no_directions_label'] ) ) {
+                        $this->settings['no_directions_label'] = __( 'No route could be found between the origin and destination', 'wpsl' );
+                    }
+
+                    update_option( 'wpsl_settings', $this->settings );
+                }
+            }
             
             update_option( 'wpsl_version', WPSL_VERSION_NUM );
         }
@@ -184,12 +248,33 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * @return void
          */
 		public function create_admin_menu() {	
-			add_menu_page( 'Store Locator', __( 'Store Locator', 'wpsl' ), __( 'manage_options', 'wpsl' ), 'wpsl_store_editor', array( $this, 'manage_stores' ), plugins_url( 'img/store-locator-icon.png', dirname( __FILE__ ) ) );
-            add_submenu_page( 'wpsl_store_editor', __( 'Manage Stores', 'wpsl' ), __( 'Manage Stores', 'wpsl' ), 'manage_options', 'wpsl_store_editor', array( $this, 'manage_stores' ) );
-			add_submenu_page( 'wpsl_store_editor', __( 'Add Store', 'wpsl' ), __( 'Add Store', 'wpsl' ), 'manage_options', 'wpsl_add_store', array( $this, 'add_store' ) );
+			$hook = add_menu_page( 'Store Locator', __( 'Store Locator', 'wpsl' ), apply_filters( 'wpsl_capability', 'manage_options' ), 'wpsl_store_editor', array( $this, 'manage_stores' ), plugins_url( 'img/store-locator-icon.png', dirname( __FILE__ ) ), apply_filters( 'wpsl_menu_position', null ) );
+            add_submenu_page( 'wpsl_store_editor', __( 'Manage Stores', 'wpsl' ), __( 'Manage Stores', 'wpsl' ), apply_filters( 'wpsl_capability', 'manage_options' ), 'wpsl_store_editor', array( $this, 'manage_stores' ) );
+			add_submenu_page( 'wpsl_store_editor', __( 'Add Store', 'wpsl' ), __( 'Add Store', 'wpsl' ), apply_filters( 'wpsl_capability', 'manage_options' ), 'wpsl_add_store', array( $this, 'add_store' ) );
             add_submenu_page( 'wpsl_store_editor', __( 'Settings', 'wpsl' ), __( 'Settings', 'wpsl' ), 'manage_options', 'wpsl_settings', array( $this, 'show_settings' ) );	
-			add_submenu_page( 'wpsl_store_editor', __( 'FAQ', 'wpsl' ), __( 'FAQ', 'wpsl' ), 'manage_options', 'wpsl_faq', array( $this, 'show_faq' ) );
-		}
+			add_submenu_page( 'wpsl_store_editor', __( 'FAQ', 'wpsl' ), __( 'FAQ', 'wpsl' ), apply_filters( 'wpsl_capability', 'manage_options' ), 'wpsl_faq', array( $this, 'show_faq' ) );
+
+            add_action( "load-$hook", array( $this, 'add_screen_options' ) );
+        }
+        
+        /**
+         * Add the screen options to the store overview page
+         * 
+         * Users can define the amount of visible stores
+         *
+         * @since 1.2.20
+         * @return void
+         */ 
+        function add_screen_options() {
+            $option = 'per_page';
+            $args = array(
+                'label'   => __( 'Stores', 'wpsl' ),
+                'default' => 20,
+                'option'  => 'wpsl_stores_per_page'
+            );
+
+            add_screen_option( $option, $args );
+        }
         
         /**
          * Load the add store template
@@ -226,8 +311,10 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 
             $this->store_actions();
             
+            $actions = ( isset( $_GET['action'] ) ) ? $_GET['action'] : '';
+            
             /* Check which store template to show */
-            switch ( $_GET['action'] ) {
+            switch ( $actions ) {
                 case 'edit_store':
                     require_once( WPSL_PLUGIN_DIR . 'admin/templates/edit-store.php' );
                     break;
@@ -246,8 +333,8 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
         public function handle_store_data() {
             
             global $wpdb;
-						
-			if ( !current_user_can( 'manage_options' ) )
+            
+			if ( !current_user_can( apply_filters( 'wpsl_capability', 'manage_options' ) ) )
 				die( '-1' );
 		
 			check_admin_referer( 'wpsl_' . $_POST['wpsl_actions'] );
@@ -267,12 +354,17 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                     $this->store_data['country-iso'] = $_POST['wpsl']['country-iso'];
                     $this->store_data['latlng']      = $latlng;
 				}
-
-                if ( $_POST['wpsl_actions'] == 'add_new_store' )
-                    $this->add_new_store(); 
-
-                if ( $_POST['wpsl_actions'] == 'update_store' )
-                    $this->update_store(); 
+                
+                $store_action = ( isset( $_POST['wpsl_actions'] ) ) ? $_POST['wpsl_actions'] : '';
+                
+                switch ( $store_action ) {
+                    case 'add_new_store':
+                        $this->add_new_store();
+                        break;
+                    case 'update_store':
+                        $this->update_store(); 
+                        break;
+                };   
             }
         }
         
@@ -290,7 +382,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             
             $store_id = absint( $_POST['store_id'] );
 
-            if ( !current_user_can( 'manage_options' ) )
+            if ( !current_user_can( apply_filters( 'wpsl_capability', 'manage_options' ) ) )
                 die( '-1' );
             
             check_ajax_referer( 'wpsl_delete_nonce_'.$store_id );
@@ -319,10 +411,11 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                             $wpdb->prepare( 
                                     "
                                     UPDATE $wpdb->wpsl_stores
-                                    SET store = %s, street = %s, city = %s, state = %s, zip = %s, country = %s, country_iso = %s, lat = %s, lng = %s, description = %s, phone = %s, fax = %s, url = %s, email = %s, hours = %s, thumb_id = %d, active = %d 
+                                    SET store = %s, address = %s, address2 = %s, city = %s, state = %s, zip = %s, country = %s, country_iso = %s, lat = %s, lng = %s, description = %s, phone = %s, fax = %s, url = %s, email = %s, hours = %s, thumb_id = %d, active = %d 
                                     WHERE wpsl_id = %d",
                                     $this->store_data['store'],
-                                    $this->store_data['street'],
+                                    $this->store_data['address'],
+                                    $this->store_data['address2'],
                                     $this->store_data['city'],
                                     $this->store_data['state'],
                                     strtoupper( $this->store_data['zip'] ),
@@ -369,11 +462,12 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                             $wpdb->prepare( 
                                     "
                                     INSERT INTO $wpdb->wpsl_stores
-                                    (store, street, city, state, zip, country, country_iso, lat, lng, description, phone, fax, url, email, hours, thumb_id)
-                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %d)
+                                    (store, address, address2, city, state, zip, country, country_iso, lat, lng, description, phone, fax, url, email, hours, thumb_id)
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %d)
                                     ", 
                                     $this->store_data['store'],
-                                    $this->store_data['street'],
+                                    $this->store_data['address'],
+                                    $this->store_data['address2'],
                                     $this->store_data['city'],
                                     $this->store_data['state'],
                                     strtoupper ( $this->store_data['zip'] ),
@@ -411,7 +505,10 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * @return string the default setting value
          */
         public function get_default_setting( $setting ) {
-			return $this->default_settings[$setting];
+            
+            global $wpsl;
+
+			return $wpsl->default_settings[$setting];
 		}
         
         /**
@@ -424,7 +521,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             
 			$store_data = $_POST['wpsl'];
 			
-			if ( empty( $store_data['store'] ) || ( empty( $store_data['street'] ) ) || ( empty( $store_data['city'] ) ) || ( empty( $store_data['zip'] ) ) || ( empty( $store_data['country'] ) )  ) {	
+			if ( empty( $store_data['store'] ) || ( empty( $store_data['address'] ) ) || ( empty( $store_data['city'] ) ) || ( empty( $store_data['zip'] ) ) || ( empty( $store_data['country'] ) )  ) {	
                 add_settings_error ( 'validate-store', esc_attr( 'validate-store' ), __( 'Please fill in all the required fields.', 'wpsl' ), 'error' );  				
 			} else {
 				return $store_data;
@@ -454,6 +551,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * @return void
          */
         public function show_settings() {
+            $this->deregister_other_gmaps();            
 			require 'templates/map-settings.php';
 		}
         
@@ -465,6 +563,41 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          */
         public function show_faq() {
            require 'templates/faq.php'; 
+        }
+        
+        /**
+         * Create the nav menu shown on store locator pages
+         *
+         * @since 1.2.20
+         * @return string $menu_nav The content of the menu
+         */
+        public function create_menu() {
+            
+            $menu_items = array(
+                'wpsl_store_editor' => __( 'Current Stores', 'wpsl' ),
+                'wpsl_add_store'    => __( 'Add Store', 'wpsl' ),
+                'wpsl_settings'     => __( 'Settings', 'wpsl' )
+            );
+
+            $menu_nav = '<ul id="wpsl-mainnav" class="nav-tab-wrapper">';            
+
+            foreach ( $menu_items as $index => $item ) {
+                if ( ( array_key_exists( $_GET['page'], $menu_items ) ) && ( $_GET['page'] == $index ) ) {
+                    $active_tab = 'nav-tab-active';
+                } else {
+                    $active_tab = '';
+                }
+                
+                /* Make sure the settings page isn't added to the menu if the user can't 'manage_options' */
+                if ( ( $index == 'wpsl_settings' ) && ( !current_user_can( 'manage_options' ) ) )
+                    break;
+                
+                $menu_nav .= '<li><a class="nav-tab ' . $active_tab . '" href="'. admin_url( 'admin.php?page=' . $index . '' ) .'">'. $item .'</a></li>';
+            }    
+
+            $menu_nav .= '</ul>';
+            
+            return $menu_nav;
         }
         
         /**
@@ -516,7 +649,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
            
             global $current_user;
 
-            if ( !current_user_can( 'manage_options' ) )
+            if ( !current_user_can( apply_filters( 'wpsl_capability', 'manage_options' ) ) )
                 die( '-1' );
             check_ajax_referer( 'wpsl-dismiss' );
 
@@ -532,24 +665,11 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * @return array $output The setting values
          */
 		public function sanitize_settings() {
-			$map_types = array( 
-                'roadmap', 
-                'satellite', 
-                'hybrid', 
-                'terrain' 
-            );
-            $unit_values = array( 
-                'px', 
-                '%' 
-            );
-            $distance_units = array( 
-                'km', 
-                'mi' 
-            );
-            $more_info_locations = array( 
-                'store listings',
-                'info window'
-            );
+            
+			$map_types           = array( 'roadmap', 'satellite', 'hybrid', 'terrain' );
+            $unit_values         = array( 'px', '%' );
+            $distance_units      = array( 'km', 'mi' );
+            $more_info_locations = array( 'store listings', 'info window' );
 		
 			$output['api_key']      = sanitize_text_field( $_POST['wpsl_api']['key'] );
 			$output['api_language'] = wp_filter_nohtml_kses( $_POST['wpsl_api']['language'] );
@@ -609,6 +729,21 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             $output['pan_controls'] 	= isset( $_POST['wpsl_map']['pan_controls'] ) ? 1 : 0;	
 			$output['control_position'] = ( $_POST['wpsl_map']['control_position']  == 'left' )  ? 'left' : 'right';	
 			$output['control_style']    = ( $_POST['wpsl_map']['control_style'] == 'small' ) ? 'small' : 'large';
+            $output['marker_clusters'] 	= isset( $_POST['wpsl_map']['marker_clusters'] ) ? 1 : 0;	
+            
+            /* Check for a valid cluster zoom value */
+            if ( in_array( $_POST['wpsl_map']['cluster_zoom'], $this->get_default_cluster_option( 'cluster_zoom' ) ) ) {
+                $output['cluster_zoom'] = $_POST['wpsl_map']['cluster_zoom'];
+            } else {
+                $output['cluster_zoom'] = $this->get_default_setting( 'cluster_zoom' );
+            }
+            
+            /* Check for a valid cluster size value */
+            if ( in_array( $_POST['wpsl_map']['cluster_size'], $this->get_default_cluster_option( 'cluster_size' ) ) ) {
+                $output['cluster_size'] = $_POST['wpsl_map']['cluster_size'];
+            } else {
+                $output['cluster_size'] = $this->get_default_setting( 'cluster_size' );
+            }
             
  			/* Check the height value of the map */
 			if ( absint( $_POST['wpsl_design']['height_value'] ) ) {
@@ -637,14 +772,24 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 			} else {
 				$output['label_width'] = $this->get_default_setting( 'label_width' );
 			}
+            
+            /* Make sure we have a valid template ID */
+            if ( absint( $_POST['wpsl_design']['template'] ) ) {
+				$output['template_id'] = $_POST['wpsl_design']['template'];
+			} else {
+				$output['template_id'] = $this->get_default_setting( 'template_id' );
+			}
 			
             $output['results_dropdown']   = isset( $_POST['wpsl_design']['design_results'] ) ? 1 : 0;          
             $output['new_window']         = isset( $_POST['wpsl_design']['new_window'] ) ? 1 : 0;	
             $output['reset_map']          = isset( $_POST['wpsl_design']['reset_map'] ) ? 1 : 0;
-            $output['store_below']        = isset( $_POST['wpsl_design']['store_below'] ) ? 1 : 0;
             $output['store_below_scroll'] = isset( $_POST['wpsl_design']['store_below_scroll'] ) ? 1 : 0;
             $output['direction_redirect'] = isset( $_POST['wpsl_design']['direction_redirect'] ) ? 1 : 0;	
             $output['more_info']          = isset( $_POST['wpsl_design']['more_info'] ) ? 1 : 0;
+            $output['store_url']          = isset( $_POST['wpsl_design']['store_url'] ) ? 1 : 0;
+            $output['phone_url']          = isset( $_POST['wpsl_design']['phone_url'] ) ? 1 : 0;
+            $output['marker_streetview']  = isset( $_POST['wpsl_design']['marker_streetview'] ) ? 1 : 0;
+            $output['marker_zoom_to']     = isset( $_POST['wpsl_design']['marker_zoom_to'] ) ? 1 : 0;
 
              /* Check if we have a valid 'more info' location */
 			if ( in_array( $_POST['wpsl_design']['more_info_location'], $more_info_locations ) ) {
@@ -653,10 +798,11 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 				$output['more_info_location'] = $this->get_default_setting( 'more_info_location' );
 			}
 
-            $output['mouse_focus']  = isset( $_POST['wpsl_design']['mouse_focus'] ) ? 1 : 0;
-            $output['start_marker'] = wp_filter_nohtml_kses( $_POST['wpsl_map']['start_marker'] );
-            $output['store_marker'] = wp_filter_nohtml_kses( $_POST['wpsl_map']['store_marker'] );
-			
+            $output['mouse_focus']    = isset( $_POST['wpsl_design']['mouse_focus'] ) ? 1 : 0;
+            $output['start_marker']   = wp_filter_nohtml_kses( $_POST['wpsl_map']['start_marker'] );
+            $output['store_marker']   = wp_filter_nohtml_kses( $_POST['wpsl_map']['store_marker'] );
+			$output['editor_country'] = sanitize_text_field( $_POST['wpsl_editor']['default_country'] );
+            
 			$missing_labels = false;
 			$required_labels = array( 
 				'search', 
@@ -667,8 +813,11 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 				'results', 
                 'more',
 				'directions', 
+                'no_directions',
                 'back',
                 'reset',
+                'street_view',
+                'zoom_here',
 				'error', 
 				'phone', 
 				'fax', 
@@ -741,11 +890,11 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
                     $msg = __( 'The Google Geocoding API returned no results for the store location. Please change the location and try again.', 'wpsl' );
 					break;	
 				case 'OVER_QUERY_LIMIT':
-                    $msg = __( 'You have reached the daily allowed geocoding limit, you can read more <a href="https://developers.google.com/maps/documentation/geocoding/#Limits">here</a>.', 'wpsl' );
+                    $msg = sprintf( __( 'You have reached the daily allowed geocoding limit, you can read more <a href="%s">here</a>.', 'wpsl' ), 'https://developers.google.com/maps/documentation/geocoding/#Limits' );
 					break;	
 				default:
                     $msg = __( 'The Google Geocoding API failed to return valid data, please try again later.', 'wpsl' );
-					break;				
+                    break;				
 			}
             
             if ( !empty( $msg ) ) {
@@ -761,7 +910,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          */
 		public function get_latlng() {
             
-            $address = $this->store_data["street"].','.$this->store_data["city"].','.$this->store_data["zip"].','.$this->store_data["country"];
+            $address = $this->store_data["address"].','.$this->store_data["city"].','.$this->store_data["zip"].','.$this->store_data["country"];
 			$url = "http://maps.googleapis.com/maps/api/geocode/json?address=".urlencode( $address )."&sensor=false&language=".$this->settings['api_language'];
 
 			if ( extension_loaded( "curl" ) && function_exists( "curl_init" ) ) {
@@ -790,15 +939,15 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          */
         public function filter_country_name( $response ) {
 
-            $length = count( $response[results][0][address_components] );
+            $length = count( $response['results'][0]['address_components'] );
             
             /* Loop over the address components untill we find the country,political part */
             for ( $i = 0; $i < $length; $i++ ) {
-                $address_component = $response[results][0][address_components][$i][types];
+                $address_component = $response['results'][0]['address_components'][$i]['types'];
 
                 if ( $address_component[0] == 'country' && $address_component[1] == 'political' ) {
-                    $country_name['long_name'] = $response[results][0][address_components][$i][long_name];
-                    $country_name['short_name'] = $response[results][0][address_components][$i][short_name];
+                    $country_name['long_name']  = $response['results'][0]['address_components'][$i]['long_name'];
+                    $country_name['short_name'] = $response['results'][0]['address_components'][$i]['short_name'];
                     
                     break;
                 }
@@ -904,6 +1053,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * and set the active value to selected.
          *
          * @since 1.0
+         * @todo generic dropdown function
          * @return string $dropdown The html for the distance option list
          */
 		public function show_distance_units() {
@@ -923,11 +1073,109 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 			
 			return $dropdown;			
 		}
+        
+        /**
+         * Create the default values for the marker clusters dropdown options
+         *
+         * @since 1.2.20
+         * @param string $type The cluster option type
+         * @return string $dropdown The default dropdown values
+         */
+		public function get_default_cluster_option( $type ) {
+            
+            $cluster_values = array(
+                'cluster_zoom' => array(
+                    '7',
+                    '8',
+                    '9',
+                    '10',
+                    '11',
+                    '12',
+                    '13'
+                ),
+                'cluster_size' => array(
+                    '40',
+                    '50',
+                    '60',
+                    '70',
+                    '80'
+                ), 
+            );
+            
+            return $cluster_values[$type];
+        }
+        
+        /**
+         * Create a dropdown for the marker cluster options, 
+         *
+         * @since 1.2.20
+         * @todo move to generic dropdown function
+         * @param string $type The cluster option type
+         * @return string $dropdown The html for the distance option list
+         */
+		public function show_cluster_options( $type ) {
+            
+			$cluster_options = array( 
+                'cluster_zoom' => array(
+                    'id'      => 'wpsl-marker-zoom',
+                    'name'    => 'cluster_zoom',
+                    'options' => $this->get_default_cluster_option( $type )
+                ),
+                'cluster_size' => array(
+                    'id'      => 'wpsl-marker-cluster-size',
+                    'name'    => 'cluster_size',
+                    'options' => $this->get_default_cluster_option( $type )
+                ),
+            );
+            
+			$dropdown = '<select id="' . $cluster_options[$type]['id'] . '" name="wpsl_map[' . $cluster_options[$type]['name'] . ']">';
+			
+            $i = 0;
+			foreach ( $cluster_options[$type]['options'] as $item => $value ) {
+				$selected = ( $this->settings[$type] == $value ) ? 'selected="selected"' : '';
+                
+                if ( $i == 0 ) {
+                    $dropdown .= "<option value='0' $selected>" . __( 'Default', 'wpsl' ) . "</option>";
+                } else {
+                    $dropdown .= "<option value='$value' $selected>" . $value . "</option>";
+                }
+                
+                $i++;
+			}
+			
+			$dropdown .= "</select>";
+			
+			return $dropdown;			
+		}
+        
+        /**
+         * Show a list of available templates
+         *
+         * @since 1.2.20
+         * @todo move to generic dropdown function
+         * @return string $dropdown The html for the template option list
+         */
+        public function show_template_options() {
+           
+			$dropdown = '<select id="wpsl-store-template" name="wpsl_design[template]">';
+            $i = 0;
+            
+            foreach ( $this->get_templates() as $template ) {
+				$selected = ( $this->settings['template_id'] == $i ) ? ' selected="selected"' : '';
+				$dropdown .= "<option value='" . $i . "' $selected>" . esc_attr( $template['name'] ) . "</option>";
+                $i++;
+            }
+			
+			$dropdown .= "</select>";
+			
+			return $dropdown;            
+        }
 		
 		/**
          * Create a dropdown where users can select the used map type
          *
          * @since 1.0
+         * @todo move to generic dropdown function
          * @return string $dropdown The html for the map option list
          */
 		public function show_map_types() {
@@ -989,13 +1237,14 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * Create a dropdown where users can select location where the 'more info' data is shown
          *
          * @since 1.2.12
+         * @todo generic dropdown function
          * @return string $dropdown The html for the more info options list
          */
 		public function show_more_info_options() {
             
 			$items = array( 
-                'store listings' => 'In the store listings',
-                'info window'    => 'In the info window on the map'
+                'store listings' => __( 'In the store listings', 'wpsl' ),
+                'info window'    => __( 'In the info window on the map', 'wpsl' )
             );
 			$dropdown = '<select id="wpsl-more-info-list" name="wpsl_design[more_info_location]">';
 			
@@ -1080,7 +1329,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 					break;			
 				case 'region':
 					$api_option_list = array (   
-						__('Select your region', '')                   => '',
+						__('Select your region', 'wpsl')                   => '',
 						__('Afghanistan', 'wpsl')                      => 'af',
 						__('Albania', 'wpsl')                          => 'al',
 						__('Algeria', 'wpsl')                          => 'dz',
@@ -1292,6 +1541,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 			
 			/* Make sure we have a array with a value */			
 			if ( !empty( $api_option_list ) && ( is_array( $api_option_list ) ) ) {
+                $option_list = '';
 				$i = 0;
 				
 				foreach ( $api_option_list as $api_option_key => $api_option_value ) {  
@@ -1303,7 +1553,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 						$selected = ( $this->settings['api_'.$list] == $api_option_value ) ? 'selected="selected"' : '';
 					}
 					
-					$option_list .= '<option value="' . esc_attr( $api_option_value ) . '"' . $selected . '> ' . esc_html( $api_option_key ) . '</option>';
+					$option_list .= '<option value="' . esc_attr( $api_option_value ) . '" ' . $selected . '> ' . esc_html( $api_option_key ) . '</option>';
 					$i++;
 				}
 												
@@ -1329,6 +1579,44 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
         }
         
         /**
+         * Deregister other Google Maps scripts
+         * 
+         * If plugins / themes also include the Google Maps library, and it is loaded after the 
+         * one from the Store Locator. It can break the autocomplete on the settings page. 
+         * To make sure this doesn't happen we look for other Google Maps scripts, 
+         * and if they exists we deregister them on the settings page.
+         * 
+         * @since 1.2.20
+         * @return void
+         */
+        public function deregister_other_gmaps() {
+                
+            global $wp_scripts;
+
+            foreach ( $wp_scripts->registered as $index => $script ) {
+                if ( ( strpos( $script->src, 'maps.google.com' ) !== false ) && ( $script->handle !== 'wpsl-gmap' ) ) { 
+                    wp_deregister_script( $script->handle );
+                }
+            }
+        }
+        
+        /**
+         * The warning messages used in wpsl-admin.js
+         *
+         * @since 1.2.20
+         * @return array $admin_js_l10n The texts used in the wpsl-admin.js
+         */
+        public function admin_js_l10n() {
+            $admin_js_l10n = array(
+                'noAddress'    => __( 'Cannot determine the address at this location.', 'wpsl' ),
+                'geocodeFail'  => __( 'Geocode was not successful for the following reason: ', 'wpsl' ),
+                'securityFail' => __( 'Security check failed, reload the page and try again.', 'wpsl' )
+            );
+            
+            return $admin_js_l10n;
+        }
+        
+        /**
          * Add the required admin script
          *
          * @since 1.0
@@ -1340,10 +1628,13 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             wp_enqueue_style( 'jquery-style', '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.css' );
 			wp_enqueue_style( 'wpsl-admin-css', plugins_url( '/css/style.css', __FILE__ ), false );
             $this->check_icon_font_usage();
-			wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false&libraries=places&language=" . $this->settings['api_language'] ), false ); // we set the language here to make sure the geocode response returns the country name in the correct language
+			wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false&libraries=places&language=" . $this->settings['api_language'] ), false, '', true ); // we set the language here to make sure the geocode response returns the country name in the correct language
 			wp_enqueue_script( 'wpsl-admin-js', plugins_url( '/js/wpsl-admin.js', __FILE__ ), array( 'jquery' ), false );				
             wp_enqueue_script( 'wpsl-queue', plugins_url( '/js/ajax-queue.js', __FILE__ ), array( 'jquery' ), false ); 
             wp_enqueue_script( 'wpsl-retina', plugins_url( '/js/retina-1.1.0.js', __FILE__ ), array( 'jquery' ), false ); 
+        
+            wp_localize_script( 'wpsl-admin-js', 'wpslL10n', $this->admin_js_l10n() );
+            
         }
 	}
 	

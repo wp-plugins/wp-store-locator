@@ -1,15 +1,17 @@
 jQuery( document ).ready( function( $ ) { 
-var geocoder, map, infowindow, directionsDisplay, directionsService, geolocationLatlng,
+var geocoder, map, infoWindow, directionsDisplay, directionsService, geolocationLatlng, markerClusterer,
 	markersArray = [],
+	directionMarkerPosition = {},
 	mapDefaults = {},
 	resetMap = false,
+	streetViewAvailable = false,
 	startMarkerData,
 	startAddress,
 	startLatLng,
 	autoLoad = wpslSettings.autoLoad,
 	$selects = $( "#wpsl-search-wrap select" );
 
-/* Load Google Maps */
+/* Initialize the map with the correct settings */
 function initializeGmap() {
     var myOptions, zoomControlPosition, zoomControlStyle,
 		latLng, zoomLevel, mapType,
@@ -17,18 +19,16 @@ function initializeGmap() {
 
     /* If no zoom location is defined, we show the entire world */	
     if ( wpslSettings.zoomLatlng !== '' ) {
-		latLng = wpslSettings.zoomLatlng.split( ',' );
+		latLng		= wpslSettings.zoomLatlng.split( ',' );
 		startLatLng = new google.maps.LatLng( latLng[0], latLng[1] );
-		zoomLevel = parseInt( wpslSettings.zoomLevel );
+		zoomLevel	= parseInt( wpslSettings.zoomLevel );
     } else {
 		startLatLng = new google.maps.LatLng( 0,0 );
-		zoomLevel = 1;
+		zoomLevel	= 1;
     }
 
-    geocoder = new google.maps.Geocoder();
-    infowindow = new google.maps.InfoWindow({
-		pixelOffset: new google.maps.Size( -12,0 ) //make the offset equal to the marker anchor, line 387
-	});
+    geocoder	      = new google.maps.Geocoder();
+    infoWindow		  = new google.maps.InfoWindow();
     directionsDisplay = new google.maps.DirectionsRenderer();
     directionsService = new google.maps.DirectionsService();
 
@@ -79,23 +79,33 @@ function initializeGmap() {
 
     map = new google.maps.Map( document.getElementById( "wpsl-gmap" ), myOptions );
 
+	/* Not the most optimal solution, but we check the useragent if we should enable the easydropdown library.
+	 * We do this because several people have reported issues with it on iOS and Android devices. So on mobile
+	 * devices the dropdowns will be styled according to the browser styles on that device.
+	 */
+	if ( !checkMobileUserAgent() ) {
+		$selects.easyDropDown({
+			cutOff: 10,
+			wrapperClass: "wpsl-dropdown"
+		});
+	} else {
+		$( "#wpsl-search-wrap select").show();
+		$( "#wpsl-wrap" ).addClass( 'wpsl-mobile' );
+	}
+	
     /* Check if we need to try and autolocate the user */
     if ( wpslSettings.autoLocate == 1 ) {
 		checkGeolocation();
     } else {
-		showStores();
+		if ( wpslSettings.autoLoad == 1 ) {
+			showStores();
+		}
 	}
 					
 	/* Move the mousecursor to the store search field if the focus option is enabled */
 	if ( wpslSettings.mouseFocus == 1 ) {
 		$( "#wpsl-search-input" ).focus();
 	}
-		
-	/* Style the dropdown menu */
-	$selects.easyDropDown({
-		cutOff: 10,
-		wrapperClass: "wpsl-dropdown"
-	});
 }
 
 function showStores() {
@@ -105,6 +115,16 @@ function showStores() {
 	
 	addMarker( startLatLng, 0, startMarker, true ); // This marker is the 'start location' marker. With a storeId of 0, no name and is draggable
 	findStoreLocations( startLatLng, resetMap, autoLoad );
+}
+
+/**
+ * Compare the current useragent to a list of known mobile useragents ( not optimal, I know )
+ *
+ * @since 1.2.20
+ * @returns {boolean} Whether the useragent is from a known mobile useragent or not.
+ */
+function checkMobileUserAgent() {
+	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent );	
 }
 
 /* Check if Geolocation detection is supported. If there is an error / timeout with determining the users 
@@ -173,7 +193,7 @@ $( "#wpsl-search-btn" ).on( "click", function() {
 $( "#wpsl-reset-map" ).on( "click", function() {
 	var keepStartMarker = false,
 		resetMap = true;
-
+	
 	/* When the start marker is dragged the autoload value is set to false. 
 	 * So we need to check the correct value when the reset button is pushed before reloading the stores. 
 	 */
@@ -185,6 +205,11 @@ $( "#wpsl-reset-map" ).on( "click", function() {
 	if ( ( ( ( map.getCenter().lat() !== mapDefaults.centerLatlng.lat() ) || ( map.getCenter().lng() !== mapDefaults.centerLatlng.lng() ) || ( map.getZoom() !== mapDefaults.zoomLevel ) ) ) ) {
 		deleteOverlays( keepStartMarker );
 		$( "#wpsl-search-input" ).val('').removeClass();
+		
+		/* If marker clusters exist, remove them from the map */
+		if ( markerClusterer ) {
+			markerClusterer.clearMarkers();
+		}
 		
 		/* Remove the start marker */
 		deleteStartMarker();
@@ -222,8 +247,8 @@ function resetDropdowns() {
 		$( "#" + dropdowns[i] + " li" ).removeClass();
 
 		$( "#" + dropdowns[i] + " li" ).each( function () {
-			if ( $(this).text() === defaultValues[i] ) {
-				$(this).addClass('active');
+			if ( $( this ).text() === defaultValues[i] ) {
+				$( this ).addClass('active');
 			}
 		});
 	}	
@@ -246,9 +271,14 @@ $( "#wpsl-result-list" ).on( "click", ".wpsl-back", function() {
 		startMarkerData.setMap( map );
 	}
 
-    fitBounds();
-	infoWindowDirectionButton();
-   
+	/* If marker clusters are enabled, then restore them */
+	if ( markerClusterer ) {		
+		checkMarkerClusters();			
+	}
+	
+	map.setCenter( directionMarkerPosition.centerLatlng );
+	map.setZoom( directionMarkerPosition.zoomLevel );	
+
     $( ".wpsl-direction-before, .wpsl-direction-after" ).remove();
     $( "#wpsl-stores" ).show();
     $( "#wpsl-direction-details" ).hide();
@@ -261,18 +291,24 @@ function renderDirections( e ) {
     
     /* 
     The storeId is placed on the li in the results list, 
-    but in the marker it will be on the wrapper div. So we check which one we need to target
+    but in the marker it will be on the wrapper div. So we check which one we need to target.
     */
     if ( e.parent( "li" ).length > 0 ) {
 		storeId = e.parent( "li" ).data( "store-id" );
     } else {
-		storeId = e.parent( ".wpsl-info-window" ).data( "store-id" );
+		storeId = e.parents( ".wpsl-info-window" ).data( "store-id" );
     }
 	
-	/* Check if we need get the start point from a dragged marker */
+	/* Check if we need to get the start point from a dragged marker */
 	if ( ( typeof( startMarkerData ) !== "undefined" )  && ( startMarkerData !== "" ) ) {
 		start = startMarkerData.getPosition();
 	}
+	
+	/* Used to restore the map back to the state it was in before the user clicked on 'directions' */
+	directionMarkerPosition = {
+		centerLatlng: map.getCenter(),
+		zoomLevel: map.getZoom()	
+	};
 
     /* Find the latlng that belongs to the start and end point */
     for ( i = 0, len = markersArray.length; i < len; i++ ) {
@@ -297,11 +333,11 @@ function renderDirections( e ) {
 /* Check if we need to enable the bouncing of markers when the user hovers over the result list */
 if ( wpslSettings.markerBounce == 1 ) {
     $( "#wpsl-stores" ).on( "mouseenter", "li", function() {
-		letsBounce( $(this).data( "store-id" ), "start" );
+		letsBounce( $( this ).data( "store-id" ), "start" );
     });
 	
     $( "#wpsl-stores" ).on( "mouseleave", "li", function() {	
-		letsBounce( $(this).data( "store-id" ), "stop" );
+		letsBounce( $( this ).data( "store-id" ), "stop" );
     });
 }
 
@@ -364,11 +400,16 @@ function calcRoute( start, end ) {
 
 				$( "#wpsl-direction-details ul" ).append( directionStops ).before( "<p class='wpsl-direction-before'><a class='wpsl-back' id='wpsl-direction-start' href='#'>" + wpslLabels.back + "</a>" + direction.legs[0].distance.text + " - " + direction.legs[0].duration.text + "</p>" ).after( "<p class='wpsl-direction-after'>" + response.routes[0].copyrights + "</p>" );
 				$( "#wpsl-direction-details" ).show();
-
-				/* Remove all other markers from the map */
+				
+				/* Remove all single markers from the map */
 				for ( i = 0, len = markersArray.length; i < len; i++ ) {
 					markersArray[i].setMap( null );
 				}
+			
+				/* Remove the marker clusters from the map */
+				if ( markerClusterer ) {
+					markerClusterer.clearMarkers();
+				}			
 				
 				/* Remove the start marker from the map */
 				if ( ( typeof( startMarkerData ) !== "undefined" )  && ( startMarkerData !== "" ) ) {
@@ -378,11 +419,13 @@ function calcRoute( start, end ) {
 				$( "#wpsl-stores" ).hide();		
 								
 				/* Make sure the start of the route directions are visible if the store listings are shown below the map */						
-				if ( wpslSettings.storeBelow == 1 ) {
+				if ( wpslSettings.templateId == 1 ) {
 					directionOffset = $( "#wpsl-gmap" ).offset();
 					$( window ).scrollTop( directionOffset.top );
 				}
 			}
+		} else {
+			directionErrors( status );
 		}
     });
 }
@@ -405,7 +448,7 @@ function codeAddress() {
 			/* Try to find stores that match the radius, location criteria */
 			findStoreLocations( latLng, resetMap, autoLoad );
 		} else {
-			geocodeNotification( status );
+			geocodeErrors( status );
 		}
     }
 )};
@@ -422,7 +465,7 @@ function reverseGeocode( latLng ) {
 				$( "#wpsl-search-input" ).val( zipCode );
 			}
 		} else {
-			geocodeNotification( status );
+			geocodeErrors( status );
 		}
 	});
 }
@@ -464,13 +507,13 @@ function findFormattedAddress( latLng, callback ) {
 			startAddress = response[0].formatted_address;
 			callback();
 		} else {
-			geocodeNotification( status );
+			hanleErrors( status );
 		}
 	});
 }
 
 function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
-	var location,
+	var latLng,
 		infoWindowData = {},
 		storeData = "",
 		draggable = false,
@@ -486,16 +529,18 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 			target : ""
 		};
 		
-	/* 
-	 * If we reset the map we use the default dropdown
-	 * values instead of the selected values
-	 */
+	/* If we reset the map we use the default dropdown values instead of the selected values. */
 	if ( resetMap ) {
 		ajaxData.max_results = wpslSettings.maxResults;
-		ajaxData.radius = wpslSettings.searchRadius;
+		ajaxData.radius		 = wpslSettings.searchRadius;
 	} else {
-		ajaxData.max_results = parseInt( $( "#wpsl-results .wpsl-dropdown .selected" ).text() );
-		ajaxData.radius = parseInt( $( "#wpsl-radius .wpsl-dropdown .selected" ).text() );
+		if ( $( "#wpsl-wrap" ).hasClass( "wpsl-mobile" ) ) {
+			ajaxData.max_results = $( "#wpsl-results .wpsl-dropdown" ).val();
+			ajaxData.radius 	 = $( "#wpsl-radius .wpsl-dropdown" ).val();
+		} else {
+			ajaxData.max_results = parseInt( $( "#wpsl-results .wpsl-dropdown .selected" ).text() );
+			ajaxData.radius 	 = parseInt( $( "#wpsl-radius .wpsl-dropdown .selected" ).text() );
+		}
 	}
 
 	/* Check if autoload all stores is enabled */
@@ -517,7 +562,8 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 				$.each( response, function( index ) {
 					infoWindowData = {
 						store: response[index].store,
-						street: response[index].street,
+						address: response[index].address,
+						address2: response[index].address2,
 						city: response[index].city,
 						country: response[index].country,
 						state: response[index].state,
@@ -531,10 +577,10 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 						thumb: response[index].thumb
 					};
 
-					location = new google.maps.LatLng( response[index].lat, response[index].lng );	
-					addMarker( location, response[index].id, infoWindowData, draggable );	
+					latLng = new google.maps.LatLng( response[index].lat, response[index].lng );	
+					addMarker( latLng, response[index].id, infoWindowData, draggable );	
 					storeData = storeData + storeHtml( response[index], url );	
-					$("#wpsl-reset-map").show();					
+					$( "#wpsl-reset-map" ).show();					
 				});
 
 				$( "#wpsl-result-list" ).off( "click", ".wpsl-directions" );
@@ -543,11 +589,15 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 				$( "#wpsl-result-list" ).on( "click", ".wpsl-directions", function() {	
 					/* Check if we need to disable the rendering of the direction on the map or not. */
 					if ( wpslSettings.directionRedirect != 1 ) {
-						renderDirections( $(this) );
+						renderDirections( $( this ) );
 						return false;
 					}
 				});
 				
+				/* Do we need to create a marker cluster? */
+				checkMarkerClusters();
+				
+				/* Make sure everything fits on the screen */
 				fitBounds();
 			} else {
 				$storeList.html( "<li class='no-results'>" + wpslLabels.noResults + "</li>" );
@@ -560,13 +610,12 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 		/* If a reset button exists, store the default zoom and latlng values. 
 		 * This way when a user clicks the reset button we can check if the zoom/latlng values have changed, 
 		 * and if we actually have to reload the map.
-		 * 
 		 */
-		if ( $("#wpsl-reset-map").length > 0 ) {
+		if ( $( "#wpsl-reset-map" ).length > 0 ) {
 			if ( $.isEmptyObject( mapDefaults ) ) {
 				mapDefaults = {
-					centerLatlng : map.getCenter(),
-					zoomLevel : map.getZoom()
+					centerLatlng: map.getCenter(),
+					zoomLevel: map.getZoom()
 				};	
 			}
 		}		
@@ -574,13 +623,42 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 	
 	/* Move the mousecursor to the store search field if the focus option is enabled */
 	if ( wpslSettings.mouseFocus == 1 ) {
-		$("#wpsl-search-input").focus();
+		$( "#wpsl-search-input" ).focus();
+	}
+}
+
+/**
+ * Check if cluster markers are enabled.
+ * If so, init the marker clustering with the 
+ * correct gridsize and max zoom.
+ * 
+ * @since 1.2.20
+ * @return {void}
+ */
+function checkMarkerClusters() {
+	if ( wpslSettings.markerClusters == 1 ) {
+		var clusterZoom = Number( wpslSettings.clusterZoom ),
+			clusterSize = Number( wpslSettings.clusterSize );
+
+		if ( isNaN( clusterZoom ) ) {
+			clusterZoom = "";
+		}
+		
+		if ( isNaN( clusterSize ) ) {
+			clusterSize = "";
+		}
+
+		markerClusterer = new MarkerClusterer( map, markersArray, {
+			gridSize: clusterSize,
+			maxZoom: clusterZoom
+		});
 	}
 }
 
 /* Add a new marker to the map based on the provided location (latlng) */
-function addMarker( location, storeId, infoWindowData, draggable ) {
-	var markerPath, mapIcon, keepStartMarker = true;
+function addMarker( latLng, storeId, infoWindowData, draggable ) {
+	var markerPath, mapIcon, marker, 
+		keepStartMarker = true;
 	
 	if ( storeId === 0 ) {
 		markerPath = wpslSettings.path + "img/markers/" + wpslSettings.startMarker;
@@ -588,39 +666,48 @@ function addMarker( location, storeId, infoWindowData, draggable ) {
 		markerPath = wpslSettings.path + "img/markers/" + wpslSettings.storeMarker;
 	}
 	
-	var mapIcon = {
+	mapIcon = {
 		url: markerPath,
-		size: new google.maps.Size( 48,70 ), //original format
 		scaledSize: new google.maps.Size( 24,35 ), //retina format
 		origin: new google.maps.Point( 0,0 ),  
 		anchor: new google.maps.Point( 12,35 )
 	};
 	
-    var infoWindowContent,
-		marker = new google.maps.Marker({
-			position: location,
-			map: map,
-			optimized: false, //fixes markers flashing while bouncing
-			title: infoWindowData.store,
-			draggable: draggable,
-			storeId: storeId,
-			icon: mapIcon
-		});	
-
-    google.maps.event.addListener( marker, "click", function() {
-		if ( storeId != 0 ) {
-			infoWindowContent = createInfoWindowHtml( infoWindowData, storeId );
-			infowindow.setContent( infoWindowContent );
-		} else {
-			infowindow.setContent( wpslLabels.startPoint );
-		}	
+    marker = new google.maps.Marker({
+		position: latLng,
+		map: map,
+		optimized: false, //fixes markers flashing while bouncing
+		title: infoWindowData.store,
+		draggable: draggable,
+		storeId: storeId,
+		icon: mapIcon
+	});	
 		
-		infowindow.open( map, marker );
-		infoWindowDirectionButton();
-    });
-
     /* Store the marker for later use */
     markersArray.push( marker );
+
+    google.maps.event.addListener( marker, "click", function() {
+		
+		/* The start marker will have a store id of 0, all others won't */
+		if ( storeId != 0 ) {
+			
+			/* Check if streetview is available at the clicked location */
+			if ( wpslSettings.markerStreetView == 1) {
+				checkStreetViewStatus( latLng, function() {	
+					setInfoWindowContent( marker, createInfoWindowHtml( infoWindowData, storeId, streetViewAvailable ) );
+				});
+			} else {
+				setInfoWindowContent( marker, createInfoWindowHtml( infoWindowData, storeId, streetViewAvailable ) );
+			}
+		} else {
+			setInfoWindowContent( marker, wpslLabels.startPoint );
+		}	
+				
+		google.maps.event.clearListeners( infoWindow );
+		google.maps.event.addListener( infoWindow, "domready", function() {	
+			infoWindowActions( marker, latLng );
+		});
+    });
 	
 	if ( draggable ) {
 		google.maps.event.addListener( marker, "dragend", function( event ) { 
@@ -632,22 +719,118 @@ function addMarker( location, storeId, infoWindowData, draggable ) {
     }
 }
 
-/* Activate the click listener for the direction buttons */
-function infoWindowDirectionButton() {
-	$( ".wpsl-info-window" ).on( "click", ".wpsl-directions", function() {	
-		/* Check if we need to disable the rendering of the direction on the map or not. */
-		if ( wpslSettings.directionRedirect != 1 ) {
-			renderDirections( $(this) );
+/**
+ * Set the correct infowindow content for the marker
+ * 
+ * @since 1.2.20
+ * @param {object} marker Marker data
+ * @param {string} InfoWindowContent The infowindow content
+ * @returns {void}
+ */
+function setInfoWindowContent( marker, InfoWindowContent ) {
+	infoWindow.setContent( InfoWindowContent );
+	infoWindow.open( map, marker );
+}
+
+/**
+ * Handle clicks for the different infowindow actions like, 
+ * direction, streetview and zoom here.
+ * 
+ * @since 1.2.20
+ * @param {object} marker Holds the marker data
+ * @param {object} activelatLng The latng of the clicked marker
+ * @returns {void}
+ */
+function infoWindowActions( marker, activelatLng ) {
+	$( ".wpsl-info-actions a" ).on( "click", function() {
+		if ( $( this ).hasClass( "wpsl-directions" ) ) {
+
+			/* Check if we need to show the direction on the map
+			 * or send the users to maps.google.com 
+			 */
+			if ( wpslSettings.directionRedirect != 1 ) {
+				renderDirections( $( this ) );
+				
+				return false;
+			}
+		} else if ( $( this ).hasClass( "wpsl-streetview" ) ) {
+			activateStreetView( marker );
+			
+			return false;
+		} else if ( $( this ).hasClass( "wpsl-zoom-here" ) ) {
+			map.setCenter( activelatLng );
+			map.setZoom( 15  );
+
 			return false;
 		}
 	});
 }
+	
+/**
+ * Activate streetview for the clicked location
+ * 
+ * @since 1.2.20
+ * @param {object} marker The current marker
+ * @returns {void}
+ */
+function activateStreetView( marker ) {
+	var panorama = map.getStreetView();
+		panorama.setPosition( marker.getPosition() );
+		panorama.setVisible( true );
+		
+	$( "#wpsl-reset-map" ).hide();
+		
+	StreetViewListener( panorama );
+}
+
+/**
+ * Listen for changes in the streetview visibility
+ * 
+ * Sometimes the infowindow offset is incorrect after switching back from streetview.
+ * We fix this by zooming in and out. If someone has a better fix, then let me know at
+ * info at tijmensmit.com
+ * 
+ * @since 1.2.20
+ * @param {object} marker The current marker
+ * @returns {void}
+ */
+function StreetViewListener( panorama ) {
+	google.maps.event.addListener( panorama, 'visible_changed', function() {
+		if ( !panorama.getVisible() ) {
+			var currentZoomLevel = map.getZoom();
+			$( "#wpsl-reset-map" ).show();
+			
+			map.setZoom( currentZoomLevel-1 );
+			map.setZoom( currentZoomLevel );
+		}
+	});
+}
+
+/**
+ * Check the streetview status
+ * 
+ * Make sure that a streetview exists for the latlng
+ * 
+ * @since 1.2.20
+ * @param {object} latLng The latlng coordinates
+ * @returns {void}
+ */
+function checkStreetViewStatus( latLng, callback ) {
+	var service = new google.maps.StreetViewService();
+	
+	service.getPanoramaByLocation( latLng, 50, function( result, status ) {
+		streetViewAvailable = ( status == google.maps.StreetViewStatus.OK ) ? true : false;	
+		callback();
+	});
+}
 
 /* Create the data for the infowindows on Google Maps */
-function createInfoWindowHtml( infoWindowData, storeId ) {
-    var storeHeader,
-		url,
+function createInfoWindowHtml( infoWindowData, storeId, streetViewAvailable ) {
+    var storeHeader, url, 
+		address2 = "",
 		newWindow = "",
+		streetView = "",
+		zoomTo = "",
 		windowContent = "<div data-store-id='" + storeId + "' class='wpsl-info-window'>";
     
     /* Check if we need to turn the store name into a link or not */
@@ -661,15 +844,19 @@ function createInfoWindowHtml( infoWindowData, storeId ) {
 		storeHeader = "<strong>" + infoWindowData.store + "</strong>";
     }
 
-    windowContent += "<p>" + storeHeader + "<span>" + infoWindowData.street + "</span><span>" + infoWindowData.city + "</span></p>";
+	if ( ( typeof( infoWindowData.address2 ) !== "undefined" ) && ( infoWindowData.address2 !== "" ) ) {
+		 address2 = "<span>" + infoWindowData.address2 + "</span>";
+	}
+
+    windowContent += "<p>" + storeHeader + "<span>" + infoWindowData.address + "</span>" + address2 + "<span>" + infoWindowData.city + "</span></p>";
 
     if ( ( typeof( infoWindowData.description ) !== "undefined" ) && ( infoWindowData.description !== "" ) ) {
 		windowContent += "<p>" + infoWindowData.description + "</p>";
     }
 
-    /* If no data exist for either the phone / fax / email then just don't show them */
+    /* If no data exist for either the phone / fax / email then we just don't show them */
     if ( ( typeof( infoWindowData.phone ) !== "undefined" ) && ( infoWindowData.phone !== "" ) ) {
-		windowContent += "<span><strong>" + wpslLabels.phone + "</strong>: " + infoWindowData.phone + "</span>";
+		windowContent += "<span><strong>" + wpslLabels.phone + "</strong>: " + formatPhoneNumber( infoWindowData.phone ) + "</span>";
     }
 
     if ( ( typeof( infoWindowData.fax ) !== "undefined" ) && ( infoWindowData.fax !== "" ) ) {
@@ -685,18 +872,57 @@ function createInfoWindowHtml( infoWindowData, storeId ) {
     }
 	
 	if ( wpslSettings.directionRedirect == 1 ) {			
-		url = createDirectionUrl( infoWindowData.street, infoWindowData.city, infoWindowData.zip, infoWindowData.country );
+		url = createDirectionUrl( infoWindowData.address, infoWindowData.city, infoWindowData.zip, infoWindowData.country );
 	} else {
 		url = {
 			src : "#",
 			target : ""
 		};
 	}
+		
+	if ( streetViewAvailable ) {
+		streetView = "<a class='wpsl-streetview' href='#'>" + wpslLabels.streetView + "</a>";
+	}
 
-    windowContent += "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a>";
-    windowContent += "</div>";
+	if ( wpslSettings.markerZoomTo == 1 ) {
+		zoomTo = "<a class='wpsl-zoom-here' href='#'>" + wpslLabels.zoomHere + "</a>";
+	}
+	
+    windowContent += "<div class='wpsl-info-actions'><a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a>" + streetView + zoomTo + "</div>";	
+	windowContent += "</div>";
 
     return windowContent;
+}
+
+/**
+ * Make the phone number clickable if we are dealing with a mobile useragent
+ * 
+ * @since 1.2.20
+ * @param {string} phoneNumber The phone number
+ * @returns {string} phoneNumber Either just the plain number, or with a link wrapped around it with tel:
+ */
+function formatPhoneNumber( phoneNumber ) {
+	if ( ( wpslSettings.phoneUrl == 1 ) && ( checkMobileUserAgent() ) ) {
+		phoneNumber = "<a href='tel:" + formatClickablePhoneNumber( phoneNumber ) + "'>" + phoneNumber + "</a>";
+	}
+	
+	return phoneNumber;
+}
+
+/**
+ * Replace spaces - . and () from phone numbers. 
+ * Also if the number starts with a + we check for a (0) and remove it.
+ * 
+ * @since 1.2.20
+ * @param {string} phoneNumber The phone number
+ * @returns {string} phoneNumber The 'cleaned' number
+ */
+function formatClickablePhoneNumber( phoneNumber ) {
+	if ( ( phoneNumber.indexOf( "+" ) != -1 ) && ( phoneNumber.indexOf( "(0)" ) != -1 ) ) {
+		phoneNumber = phoneNumber.replace( '(0)', '' );
+	}
+	
+	return phoneNumber.replace( /(-| |\(|\)|\.|)/g, '' );	
 }
 
 function createMoreInfoListing( storeData ) {
@@ -711,7 +937,7 @@ function createMoreInfoListing( storeData ) {
 	
 	/* If no data exist for either the phone / fax / email then just don't show them */
     if ( ( typeof( storeData.phone ) !== "undefined" ) && ( storeData.phone !== "" ) ) {
-		moreInfoContent += "<span><strong>" + wpslLabels.phone + "</strong>: " + storeData.phone + "</span>";
+		moreInfoContent += "<span><strong>" + wpslLabels.phone + "</strong>: " + formatPhoneNumber( storeData.phone ) + "</span>";
     }
 
     if ( ( typeof( storeData.fax ) !== "undefined" ) && ( storeData.fax !== "" ) ) {
@@ -741,7 +967,18 @@ function createMoreInfoListing( storeData ) {
 	return moreInfoContent;
 }
 
-function createDirectionUrl( street, city, zip, country ) {
+/**
+ * Create the url that takes the user to the maps.google.com page 
+ * and shows the correct driving directions.
+ * 
+ * @since 1.0
+ * @param {string} address The store address
+ * @param {string} city The store city
+ * @param {string} zip The store zipcode
+ * @param {string} country The store country
+ * @returns {string} url The full maps.google.com url with the encoded start + end address
+ */
+function createDirectionUrl( address, city, zip, country ) {
 	var destinationAddress, url;
 	
 	/* If we somehow failed to determine the start address, just set it to empty */
@@ -749,39 +986,54 @@ function createDirectionUrl( street, city, zip, country ) {
 		startAddress = '';
 	}
 
-	destinationAddress = street + ', ' + city + ', ' + zip + ', ' + country;
+	destinationAddress = address + ', ' + city + ', ' + zip + ', ' + country;
 
 	url = {
-		src : "https://maps.google.com/maps?saddr=" + encodeURIComponent( startAddress ) + "&daddr=" + encodeURIComponent( destinationAddress ) + "",
+		src : "https://maps.google.com/maps?saddr=" + rfc3986EncodeURIComponent( startAddress ) + "&daddr=" + rfc3986EncodeURIComponent( destinationAddress ) + "",
 		target : "target='_blank'"
 	};
 
 	return url;
 }
 
+/**
+ * Make the URI encoding compatible with RFC 3986
+ * 
+ * !, ', (, ), and * will be escaped, otherwise they break the string
+ * 
+ * @since 1.2.20
+ * @param {string} str The string to encode
+ * @returns {string} The encoded string
+ */
+function rfc3986EncodeURIComponent( str ) {  
+    return encodeURIComponent( str ).replace( /[!'()*]/g, escape );  
+}
+
 function storeHtml( response, url ) {
 	var html = "", 
 		moreInfoData,
 		storeImg = "",
+		storeUrlTarget = "",
 		moreInfo = "",
 		moreInfoUrl = "#",
 		id = response.id,
 		store = response.store,
-		street = response.street, 
+		address = response.address,
+		address2 = "",
 		city = response.city,
 		state = response.state, 
 		zip = response.zip,
 		thumb = response.thumb,
 		country = response.country,
 		distance = parseFloat( response.distance ).toFixed(1) + " " + wpslSettings.distanceUnit;
-	
+		
 		if ( ( typeof( thumb ) !== "undefined" ) && ( thumb !== "" ) ) {
 			storeImg = "<img class='wpsl-store-thumb' src='" + thumb + "' width='48' height='48'  alt='" + store + "' />";
 		}
 		
 		/* Check if we need to create an url that sends the user to maps.google.com for driving directions */
 		if ( wpslSettings.directionRedirect == 1 ) {			
-			url = createDirectionUrl( street, city, zip, country );
+			url = createDirectionUrl( address, city, zip, country );
 		}
 		
 		/* Check if we need to show the 'more info' link in the store listings */
@@ -790,10 +1042,13 @@ function storeHtml( response, url ) {
 		   /* If we show the store listings under the map, we do want to jump to the 
 			* top of the map to focus on the opened infowindow 
 			*/
-			if ( ( wpslSettings.storeBelow == 1 ) && ( wpslSettings.moreInfoLocation == 'info window' ) ) {
+			if ( ( wpslSettings.templateId == 1 ) && ( wpslSettings.moreInfoLocation == 'info window' ) ) {
 				moreInfoUrl = '#wpsl-search-wrap';
 			}
 			
+			/* Do we need to show the 'more info' data under the store details, 
+			 * or should we only add a link which will trigger the infowindow? 
+			 */
 			if ( wpslSettings.moreInfoLocation == "store listings" ) {
 				
 				/* Only create the 'more info' link if there is data to show */
@@ -809,8 +1064,26 @@ function storeHtml( response, url ) {
 				moreInfo = "<p><a class='wpsl-store-details' href=" + moreInfoUrl + ">" + wpslLabels.moreInfo + "</a></p>";
 			}
 		}
+		
+		/* Check if we need to make the store name clickable */
+		if ( wpslSettings.storeUrl == 1) {
+			if ( ( typeof( response.url ) !== "undefined" ) && ( response.url !== "" ) ) {
+				
+				/* Do we need to open the url in a new window? */
+				if ( wpslSettings.newWindow == 1 ) {
+					storeUrlTarget = "target='_blank'";
+				}
+				
+				store = "<a " + storeUrlTarget + " href=" + response.url + ">" + store + "</a>";
+			}
+		}
+		
+		/* If we have a second address line, we add it */
+		if ( ( typeof( response.address2 ) !== "undefined" ) && ( response.address2 !== "" ) ) {
+			address2 = "<span class='wpsl-street'>" + response.address2 + "</span>";
+		}
 
-		html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + street + "</span>"  + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p>" + moreInfo + "</div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
+		html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + address + "</span>" + address2 + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p>" + moreInfo + "</div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
 
 	return html;
 }
@@ -857,10 +1130,21 @@ function deleteOverlays( keepStartMarker ) {
 
 		markersArray.length = 0;
     }
+	
+	/* If marker clusters exist, remove them from the map */
+	if ( markerClusterer ) {
+		markerClusterer.clearMarkers();
+	}
 }
 
-/* Handle the geocode errors */
-function geocodeNotification( status ) {
+/**
+ * Handle the geocode errors.
+ * 
+ * @since 1.0
+ * @param {string} status Contains the error code
+ * @returns void
+ */
+function geocodeErrors( status ) {
     var msg;
 
     switch ( status ) {
@@ -870,6 +1154,32 @@ function geocodeNotification( status ) {
 		case "OVER_QUERY_LIMIT":
 			msg = wpslLabels.queryLimit;
 			break;	
+		default:
+			msg = wpslLabels.generalError;
+			break;
+    }
+
+    alert( msg );	
+}
+
+/**
+ * Handle the driving direction errors.
+ * 
+ * @since 1.2.20
+ * @param {string} status Contains the error code
+ * @returns void
+ */
+function directionErrors( status ) {
+    var msg;
+
+    switch ( status ) {
+		case "NOT_FOUND":
+		case "ZERO_RESULTS":
+			msg = wpslLabels.noDirectionsFound;
+			break;	
+		case "OVER_QUERY_LIMIT":
+			msg = wpslLabels.queryLimit;
+			break;
 		default:
 			msg = wpslLabels.generalError;
 			break;
@@ -917,7 +1227,7 @@ $( "#wpsl-stores" ).on( "click", ".wpsl-store-details", function() {
 	/* If we show the store listings under the map, we do want to jump to the 
 	 * top of the map to focus on the opened infowindow 
 	 */
-	if ( wpslSettings.storeBelow != 1 || wpslSettings.moreInfoLocation == "store listings" ) {
+	if ( wpslSettings.templateId != 1 || wpslSettings.moreInfoLocation == "store listings" ) {
 		return false;
 	}
 });

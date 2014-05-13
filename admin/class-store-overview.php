@@ -17,7 +17,7 @@ class WPSL_Store_Overview extends WP_List_Table {
      * @since 1.0
      * @var string
      */
-    private $_per_page = 10;
+    private $_per_page;
 
     /**
      * Class constructor
@@ -31,13 +31,35 @@ class WPSL_Store_Overview extends WP_List_Table {
             'plural'   => __( 'Stores', 'wpsl' ),
             'ajax'     => true
         ) );
+        
+        $this->_per_page = $this->get_per_page();
     }
-
+    
+    /**
+     * Get the per_page value from the option table
+     * 
+     * @since 1.2.20
+     * @return string $per_page The amount of stores to show per page
+     */
+    function get_per_page() {
+        
+        $user     = get_current_user_id();
+        $screen   = get_current_screen();
+        $option   = $screen->get_option( 'per_page', 'option' );
+        $per_page = get_user_meta( $user, $option, true );
+        
+        if ( empty( $per_page ) || $per_page < 1 ) {
+            $per_page = $screen->get_option( 'per_page', 'default' );
+        }
+        
+        return $per_page;
+    }
+    
     /**
      * The default message that is shown when no store data exists
      * 
      * @since 1.0
-     * @return string The default message
+     * @return void
      */
     function no_items() {
         _e( 'No stores found', 'wpsl' );
@@ -56,7 +78,7 @@ class WPSL_Store_Overview extends WP_List_Table {
         switch( $column_name ) { 
             case 'wpsl_id':
             case 'store':
-            case 'street':
+            case 'address':
             case 'city':
             case 'state':
             case 'zip':
@@ -72,7 +94,7 @@ class WPSL_Store_Overview extends WP_List_Table {
             case 'active':
                 return ( $item['active'] ) ? __( 'Active', 'wpsl' ) : __( 'Inactive', 'wpsl' );
             case 'action':
-                return '<a class="button" href="' . admin_url( 'admin.php?page=wpsl_store_editor&action=edit_store&store_id=' . $item['wpsl_id'] ) . '">'. __( 'Edit', 'wpsl' ) . '</a><input type="button" class="button wpsl-delete-store-btn" name="text" value="Delete"><input name="wpsl_store_id" type="hidden" value="' . $item['wpsl_id'] . '" /><input name="wpsl_delete_nonce" type="hidden" value="' . wp_create_nonce( 'wpsl_delete_nonce_'.$item['wpsl_id'] ) . '" />'; 
+                return '<a class="button" href="' . admin_url( 'admin.php?page=wpsl_store_editor&action=edit_store&store_id=' . $item['wpsl_id'] ) . '">' . __( 'Edit', 'wpsl' ) . '</a><input type="button" class="button wpsl-delete-store-btn" name="text" value="' . __( 'Delete', 'wpsl' ) . '"><input name="wpsl_store_id" type="hidden" value="' . $item['wpsl_id'] . '" /><input name="wpsl_delete_nonce" type="hidden" value="' . wp_create_nonce( 'wpsl_delete_nonce_'.$item['wpsl_id'] ) . '" />'; 
             default:
                 return 'wpsl_id';
         }
@@ -90,7 +112,7 @@ class WPSL_Store_Overview extends WP_List_Table {
             'wpsl_id' => array( 'wpsl_id', true ), //true = already sorted ( default )
             'thumb'   => array( 'thumb', false ),
             'store'   => array( 'store', false ),
-            'street'  => array( 'street', false ),
+            'address' => array( 'address', false ),
             'city'    => array( 'city', false ),
             'state'   => array( 'state', false ),
             'zip'     => array( 'zip', false ),
@@ -113,12 +135,12 @@ class WPSL_Store_Overview extends WP_List_Table {
             'wpsl_id' => __( 'ID', 'wpsl' ),
             'thumb'   => __( 'Thumbnail', 'wpsl' ),
             'store'   => __( 'Name', 'wpsl' ),
-            'street'  => __( 'Address', 'wpsl' ),
+            'address' => __( 'Address', 'wpsl' ),
             'city'    => __( 'City', 'wpsl' ),
             'state'   => __( 'State', 'wpsl' ),
             'zip'     => __( 'Zip', 'wpsl' ),
             'active'  => __( 'Status', 'wpsl' ),
-            'action'  => __( 'Actions', 'wpsl' ),
+            'action'  => __( 'Actions', 'wpsl' )
         );
 
         return $columns;
@@ -146,9 +168,9 @@ class WPSL_Store_Overview extends WP_List_Table {
     function get_bulk_actions() {
         
         $actions = array(
-            'delete'     => 'Delete',
-            'activate'   => 'Activate',
-            'deactivate' => 'Deactivate'
+            'delete'     => __( 'Delete', 'wpsl' ),
+            'activate'   => __( 'Activate', 'wpsl' ),
+            'deactivate' => __( 'Deactivate', 'wpsl' )
         );
 
         return $actions;
@@ -167,23 +189,24 @@ class WPSL_Store_Overview extends WP_List_Table {
         global $wpdb;
 
         if ( $status === 'deactivate' ) {
-            $active_status = 0;
+            $active_status       = 0;
             $success_action_desc = __( 'deactivated', 'wpsl' );
-            $fail_action_desc = __( 'deactivating', 'wpsl' );
+            $fail_action_desc    = __( 'deactivating', 'wpsl' );
         } else {
-            $active_status = 1;
+            $active_status       = 1;
             $success_action_desc = __( 'activated', 'wpsl' );
-            $fail_action_desc = __( 'activating', 'wpsl' );
+            $fail_action_desc    = __( 'activating', 'wpsl' );
         }
         
         $result = $wpdb->query( $wpdb->prepare( "UPDATE $wpdb->wpsl_stores SET active = %d WHERE wpsl_id IN ( $store_ids )", $active_status ) );	   
         
         if ( $result === false ) {
             $state = 'error';
-            $msg = __( 'There was a problem ' . $fail_action_desc . ' the store(s), please try again.', 'wpsl' );
+            $msg = sprintf( __( 'There was a problem %s the store(s), please try again.', 'wpsl' ), $fail_action_desc );
+
         } else {
             $state = 'updated';
-            $msg = __( 'Store(s) successfully ' . $success_action_desc , 'wpsl' );
+            $msg = sprintf( __( 'Store(s) successfully %s.', 'wpsl' ), $success_action_desc );
         } 
         
         add_settings_error ( 'bulk-state', esc_attr( 'bulk-state' ), $msg, $state );
@@ -204,10 +227,10 @@ class WPSL_Store_Overview extends WP_List_Table {
         
         if ( $result === false ) {
             $state = 'error';
-            $msg = __( 'There was a problem removing the store(s), please try again.', 'wpsl' );
+            $msg   = __( 'There was a problem removing the store(s), please try again.', 'wpsl' );
         } else {
             $state = 'updated';
-            $msg = __( 'Store(s) successfully removed.' , 'wpsl' );
+            $msg   = __( 'Store(s) successfully removed.' , 'wpsl' );
         } 
         
         add_settings_error ( 'bulk-remove', esc_attr( 'bulk-remove' ), $msg, $state );
@@ -221,7 +244,7 @@ class WPSL_Store_Overview extends WP_List_Table {
      */
     function process_bulk_action() {
         
-        if ( !current_user_can( 'manage_options' ) )
+        if ( !current_user_can( apply_filters( 'wpsl_capability', 'manage_options' ) ) )
             die( '-1' );
         
         if ( isset( $_POST['_wpnonce'] ) && ! empty( $_POST['_wpnonce'] ) ) {
@@ -232,8 +255,9 @@ class WPSL_Store_Overview extends WP_List_Table {
                 wp_die( 'Nope! Security check failed!' );
             
             $action = $this->current_action();
-            
-            if ( !empty ( $action ) ) {
+
+            /* If an action is set continue, otherwise reload the page */
+            if ( !empty( $action ) ) {
                 $id_list = array();
 
                 foreach ( $_POST['store'] as $store_id ) {
@@ -269,26 +293,28 @@ class WPSL_Store_Overview extends WP_List_Table {
     function get_store_list() {
         
         global $wpdb;
+        
+        $total_items = 0;
                 
         /* Check if we need to run the search query or just show all the data */
-        if ( isset( $_POST['s'] ) ){
+        if ( isset( $_POST['s'] ) && ( !empty( $_POST['s'] ) ) ) {
             $search = trim( $_POST['s'] );
             $result = $wpdb->get_results( 
-                            $wpdb->prepare( "SELECT wpsl_id, store, street, city, state, zip, thumb_id AS thumb, active 
+                            $wpdb->prepare( "SELECT wpsl_id, store, address, city, state, zip, thumb_id AS thumb, active 
                                              FROM $wpdb->wpsl_stores
-                                             WHERE store LIKE %s OR street LIKE %s OR city LIKE %s OR state LIKE %s OR zip LIKE %s", 
+                                             WHERE store LIKE %s OR address LIKE %s OR city LIKE %s OR state LIKE %s OR zip LIKE %s", 
                                              '%' . like_escape( $search ). '%', '%' . like_escape( $search ). '%', '%' . like_escape( $search ). '%', '%' . like_escape( $search ). '%', '%' . like_escape( $search ). '%'
                                           ), ARRAY_A 
                             );
         } else {
             /* Order params */
-            $orderby = !empty ( $_GET["orderby"] ) ? mysql_real_escape_string ( $_GET["orderby"] ) : 'store';
-            $order = !empty ( $_GET["order"] ) ? mysql_real_escape_string ( $_GET["order"] ) : 'ASC';
+            $orderby   = !empty ( $_GET["orderby"] ) ? mysql_real_escape_string ( $_GET["orderby"] ) : 'store';
+            $order     = !empty ( $_GET["order"] ) ? mysql_real_escape_string ( $_GET["order"] ) : 'ASC';
             $order_sql = $orderby.' '.$order; 
 
             /* Pagination parameters */
             $total_items = $wpdb->get_var( "SELECT COUNT(*) AS count FROM $wpdb->wpsl_stores" );
-            $paged = !empty ( $_GET["paged"] ) ? mysql_real_escape_string ( $_GET["paged"] ) : '';
+            $paged       = !empty ( $_GET["paged"] ) ? mysql_real_escape_string ( $_GET["paged"] ) : '';
             
             if ( empty( $paged ) || !is_numeric( $paged ) || $paged <= 0 ) { 
                 $paged = 1; 
@@ -297,11 +323,11 @@ class WPSL_Store_Overview extends WP_List_Table {
             $totalpages = ceil( $total_items / $this->_per_page );
             
             if ( !empty( $paged ) && !empty( $this->_per_page ) ){
-                $offset = ( $paged - 1 ) * $this->_per_page;
+                $offset    = ( $paged - 1 ) * $this->_per_page;
                 $limit_sql = (int)$offset.',' . (int)$this->_per_page;
             }
             
-            $result = $wpdb->get_results( "SELECT wpsl_id, store, street, city, state, zip, thumb_id AS thumb, active FROM $wpdb->wpsl_stores ORDER BY $order_sql LIMIT $limit_sql", ARRAY_A );
+            $result = $wpdb->get_results( "SELECT wpsl_id, store, address, city, state, zip, thumb_id AS thumb, active FROM $wpdb->wpsl_stores ORDER BY $order_sql LIMIT $limit_sql", ARRAY_A );
         }
         
         $i = 0;
@@ -333,15 +359,15 @@ class WPSL_Store_Overview extends WP_List_Table {
      */
     function prepare_items() {
         
-        $columns = $this->get_columns();
-        $hidden = array();
+        $columns  = $this->get_columns();
+        $hidden   = array();
         $sortable = $this->get_sortable_columns();
         
         $this->process_bulk_action();        
         $response = $this->get_store_list();
 
         $current_page = $this->get_pagenum();
-        $total_items = $response['count'];
+        $total_items  = $response['count'];
         
         $this->set_pagination_args( array(
             'total_items' => $total_items,
