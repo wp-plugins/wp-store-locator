@@ -5,7 +5,7 @@ Plugin URI:
 Description: An easy to use location management system that enables users to search for nearby physical stores
 Author: Tijmen Smit
 Author URI: http://tijmensmit.com/
-Version: 1.2.20
+Version: 1.2.21
 Text Domain: wpsl
 Domain Path: /languages/
 License: GPLv3
@@ -83,7 +83,7 @@ if ( !class_exists( 'WP_Store_locator' ) ) {
         public function define_constants() {
             
             if ( !defined( 'WPSL_VERSION_NUM' ) )
-                define( 'WPSL_VERSION_NUM', '1.2.20' );
+                define( 'WPSL_VERSION_NUM', '1.2.21' );
 
             if ( !defined( 'WPSL_URL' ) )
                 define( 'WPSL_URL', plugin_dir_url( __FILE__ ) );

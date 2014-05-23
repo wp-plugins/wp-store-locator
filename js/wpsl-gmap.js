@@ -507,7 +507,7 @@ function findFormattedAddress( latLng, callback ) {
 			startAddress = response[0].formatted_address;
 			callback();
 		} else {
-			hanleErrors( status );
+			geocodeErrors( status );
 		}
 	});
 }

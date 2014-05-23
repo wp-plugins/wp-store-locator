@@ -3,7 +3,7 @@ Contributors: tijmensmit
 Tags: google maps, store locator, business locations, geocoding, stores, geo
 Requires at least: 3.5
 Tested up to: 3.9.1
-Stable tag: 1.2.20
+Stable tag: 1.2.21
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -77,6 +77,9 @@ If you find a plugin or theme that causes a conflict, please report it on the [s
 5. Overview from the current stores
 
 == Changelog ==
+
+= 1.2.21 =
+* Fixed an js error breaking the store locator
 
 = 1.2.20 =
 * Fixed the directions url sometimes showing an incomplete address due to an encoding issue
