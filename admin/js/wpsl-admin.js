@@ -120,11 +120,17 @@ $( "#wpsl-lookup-location" ).on( "click", function() {
  * @returns {void}
  */
 function codeAddress() {
-    var filteredResponse,
-		address		= $( "#wpsl-store-address" ).val(),
-		city		= $( "#wpsl-store-city" ).val(),
-		country		= $( "#wpsl-store-country" ).val(),
-		fullAddress = address + ',' + city + ',' + country;
+    var filteredResponse, fullAddress,
+		address = $( "#wpsl-store-address" ).val(),
+		city	= $( "#wpsl-store-city" ).val(),
+		zip		= $( "#wpsl-store-zip" ).val(),
+		country	= $( "#wpsl-store-country" ).val();
+	
+		if ( zip ) {
+			fullAddress = address + ',' + city + ',' + zip + ',' + country;
+		} else {
+			fullAddress = address + ',' + city + ',' + country;
+		}
 		
 		/* Check we have all the requird data before attempting to geocode the address */
 		if ( !validatePreviewFields( address, city, country ) ) {
