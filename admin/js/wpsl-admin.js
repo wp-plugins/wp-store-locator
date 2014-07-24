@@ -2,7 +2,12 @@ jQuery( document ).ready( function( $ ) {
 var map, geocoder, uploadFrame, 
 	markersArray = [];
 
-/* Load the Google Maps */
+/**
+ * Initialize the map with the correct settings
+ *
+ * @since 1.0
+ * @returns {void}
+ */
 function initializeGmap() {
 	var myOptions = {
 			zoom: 2,
@@ -17,7 +22,12 @@ function initializeGmap() {
 	checkEditStoreMarker();
 }
 
-/* If we have an existing latln value, add a marker to the map. This can only happen on the edit store page */
+/**
+ * If we have an existing latlng value, add a marker to the map. This can only happen on the edit store page 
+ *
+ * @since 1.0
+ * @returns {void}
+ */
 function checkEditStoreMarker() {
 	var location,
 		lat = $( "#wpsl-store-lat" ).val(),
@@ -37,7 +47,12 @@ if ( $( "#wpsl-zoom-name" ).length ) {
 	activateAutoComplete();	
 }
 
-/* Activate the autocomplete function for the city/country field */
+/**
+ * Activate the autocomplete function for the city/country field
+ *
+ * @since 1.0
+ * @returns {void}
+ */
 function activateAutoComplete() {
 	var latlng,
 		input = document.getElementById( "wpsl-zoom-name" ),
@@ -52,7 +67,13 @@ function activateAutoComplete() {
 	});	
 }
 
-/* Add a new marker to the map based on the provided location (latlng) */
+/**
+ * Add a new marker to the map based on the provided location (latlng)
+ *
+ * @since 1.0
+ * @param {object} location The latlng value
+ * @returns {void}
+ */
 function addMarker( location ) {
 	var marker = new google.maps.Marker({
 		position: location,
@@ -67,7 +88,13 @@ function addMarker( location ) {
 	});
 }
 
-/* Lookup the location where the marker is dropped */
+/**
+ * Lookup the location where the marker is dropped
+ *
+ * @since 1.0
+ * @param {object} pos The latlng value
+ * @returns {void}
+ */
 function geocodeDraggedPosition( pos ) {
 	geocoder.geocode({
 		latLng: pos
@@ -86,17 +113,21 @@ $( "#wpsl-lookup-location" ).on( "click", function() {
 	return false;
 });
 
-/* Geocode the user input */ 
+/**
+ * Geocode the user input 
+ *
+ * @since 1.0
+ * @returns {void}
+ */
 function codeAddress() {
     var filteredResponse,
-		address = $( "#wpsl-store-address" ).val(),
-		city = $( "#wpsl-store-city" ).val(),
-		zip = $( "#wpsl-store-zip" ).val(),
-		country = $( "#wpsl-store-country" ).val(),
-		fullAddress = address + ',' + city + ',' + zip + ',' + country;
+		address		= $( "#wpsl-store-address" ).val(),
+		city		= $( "#wpsl-store-city" ).val(),
+		country		= $( "#wpsl-store-country" ).val(),
+		fullAddress = address + ',' + city + ',' + country;
 		
 		/* Check we have all the requird data before attempting to geocode the address */
-		if ( !validatePreviewFields( address, city, zip, country ) ) {
+		if ( !validatePreviewFields( address, city, country ) ) {
 			geocoder.geocode( { 'address': fullAddress }, function( response, status ) {
 				if ( status === google.maps.GeocoderStatus.OK ) {
 					
@@ -124,8 +155,16 @@ function codeAddress() {
 		}
 }
 
-/* Check that all required fields for the preview to work are there */
-function validatePreviewFields( address, city, zip, country ) {
+/**
+ * Check that all required fields for the preview to work are there 
+ *
+ * @since 1.0
+ * @param {string} address The store address
+ * @param {string} city The store city
+ * @param {string} country The store country
+ * @returns {boolean} error Whether a field validated or not
+ */
+function validatePreviewFields( address, city, country ) {
 	var error = false;
 	
 	$( "#wpsl-wrap input" ).removeClass( "wpsl-error" );
@@ -139,12 +178,7 @@ function validatePreviewFields( address, city, zip, country ) {
 		$( "#wpsl-store-city" ).addClass( "wpsl-error" );
 		error = true;
 	}
-
-	if ( !zip ) {
-		$( "#wpsl-store-zip" ).addClass( "wpsl-error" );
-		error = true;
-	}	
-
+	
 	if ( !country ) {
 		$( "#wpsl-store-country" ).addClass( "wpsl-error" );
 		error = true;

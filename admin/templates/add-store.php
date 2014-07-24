@@ -34,7 +34,7 @@
                         </p>                        
                         <p>
                             <label for="wpsl-store-zip"><?php _e( 'Zip Code:', 'wpsl' ); ?></label>
-                            <input id="wpsl-store-zip" name="wpsl[zip]" type="text" class="textinput <?php if ( isset( $_POST['wpsl'] ) && empty( $_POST['wpsl']['zip'] ) ) { echo 'wpsl-error'; } ?>" value="<?php if ( !empty( $_POST['wpsl']['zip'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['zip'] ) );  } ?>" />
+                            <input id="wpsl-store-zip" name="wpsl[zip]" type="text" class="textinput" value="<?php if ( !empty( $_POST['wpsl']['zip'] ) ) { echo esc_attr( stripslashes( $_POST['wpsl']['zip'] ) );  } ?>" />
                         </p>
                         <p>
                             <label for="wpsl-store-country"><?php _e( 'Country:', 'wpsl' ); ?></label>

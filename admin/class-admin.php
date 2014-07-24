@@ -521,7 +521,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
             
 			$store_data = $_POST['wpsl'];
 			
-			if ( empty( $store_data['store'] ) || ( empty( $store_data['address'] ) ) || ( empty( $store_data['city'] ) ) || ( empty( $store_data['zip'] ) ) || ( empty( $store_data['country'] ) )  ) {	
+			if ( empty( $store_data['store'] ) || ( empty( $store_data['address'] ) ) || ( empty( $store_data['city'] ) ) || ( empty( $store_data['country'] ) ) ) {	
                 add_settings_error ( 'validate-store', esc_attr( 'validate-store' ), __( 'Please fill in all the required fields.', 'wpsl' ), 'error' );  				
 			} else {
 				return $store_data;
@@ -667,7 +667,6 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
 		public function sanitize_settings() {
             
 			$map_types           = array( 'roadmap', 'satellite', 'hybrid', 'terrain' );
-            $unit_values         = array( 'px', '%' );
             $distance_units      = array( 'km', 'mi' );
             $more_info_locations = array( 'store listings', 'info window' );
 		
@@ -1623,18 +1622,23 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
          * @return void
          */
 		public function admin_scripts() {	
-			wp_enqueue_media();
-            wp_enqueue_script( 'jquery-ui-dialog' );
-            wp_enqueue_style( 'jquery-style', '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.css' );
-			wp_enqueue_style( 'wpsl-admin-css', plugins_url( '/css/style.css', __FILE__ ), false );
-            $this->check_icon_font_usage();
-			wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false&libraries=places&language=" . $this->settings['api_language'] ), false, '', true ); // we set the language here to make sure the geocode response returns the country name in the correct language
-			wp_enqueue_script( 'wpsl-admin-js', plugins_url( '/js/wpsl-admin.js', __FILE__ ), array( 'jquery' ), false );				
-            wp_enqueue_script( 'wpsl-queue', plugins_url( '/js/ajax-queue.js', __FILE__ ), array( 'jquery' ), false ); 
-            wp_enqueue_script( 'wpsl-retina', plugins_url( '/js/retina-1.1.0.js', __FILE__ ), array( 'jquery' ), false ); 
-        
-            wp_localize_script( 'wpsl-admin-js', 'wpslL10n', $this->admin_js_l10n() );
             
+            $screen = get_current_screen();
+
+            /* Only enqueue the styles and scripts if we are on a page that belongs to the store locator */
+            if ( strpos( $screen->id, 'wpsl_' ) !== false ) {
+                wp_enqueue_media();
+                wp_enqueue_script( 'jquery-ui-dialog' );
+                wp_enqueue_style( 'jquery-style', '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.css' );
+                wp_enqueue_style( 'wpsl-admin-css', plugins_url( '/css/style.css', __FILE__ ), false );
+                wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false&libraries=places&language=" . $this->settings['api_language'] ), false, '', true ); // we set the language here to make sure the geocode response returns the country name in the correct language
+                wp_enqueue_script( 'wpsl-admin-js', plugins_url( '/js/wpsl-admin.js', __FILE__ ), array( 'jquery' ), false );				
+                wp_enqueue_script( 'wpsl-queue', plugins_url( '/js/ajax-queue.js', __FILE__ ), array( 'jquery' ), false ); 
+                wp_enqueue_script( 'wpsl-retina', plugins_url( '/js/retina-1.1.0.js', __FILE__ ), array( 'jquery' ), false ); 
+                wp_localize_script( 'wpsl-admin-js', 'wpslL10n', $this->admin_js_l10n() );
+            }
+            
+            $this->check_icon_font_usage();
         }
 	}
 	

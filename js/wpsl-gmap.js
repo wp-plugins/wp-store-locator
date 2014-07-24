@@ -11,14 +11,18 @@ var geocoder, map, infoWindow, directionsDisplay, directionsService, geolocation
 	autoLoad = wpslSettings.autoLoad,
 	$selects = $( "#wpsl-search-wrap select" );
 
-/* Initialize the map with the correct settings */
+/**
+ * Initialize the map with the correct settings
+ *
+ * @since 1.0
+ * @returns {void}
+ */
 function initializeGmap() {
-    var myOptions, zoomControlPosition, zoomControlStyle,
-		latLng, zoomLevel, mapType,
+    var myOptions, zoomControlPosition, zoomControlStyle, latLng, zoomLevel, mapType,
 		streetViewVisible = ( wpslSettings.streetView == 1 ) ? true : false;
 
     /* If no zoom location is defined, we show the entire world */	
-    if ( wpslSettings.zoomLatlng !== '' ) {
+    if ( wpslSettings.zoomLatlng !== "" ) {
 		latLng		= wpslSettings.zoomLatlng.split( ',' );
 		startLatLng = new google.maps.LatLng( latLng[0], latLng[1] );
 		zoomLevel	= parseInt( wpslSettings.zoomLevel );
@@ -90,7 +94,7 @@ function initializeGmap() {
 		});
 	} else {
 		$( "#wpsl-search-wrap select").show();
-		$( "#wpsl-wrap" ).addClass( 'wpsl-mobile' );
+		$( "#wpsl-wrap" ).addClass( "wpsl-mobile" );
 	}
 	
     /* Check if we need to try and autolocate the user */
@@ -108,6 +112,12 @@ function initializeGmap() {
 	}
 }
 
+/**
+ * Add the start marker and call the function that inits the store search
+ *
+ * @since 1.1
+ * @returns {void}
+ */
 function showStores() {
 	var startMarker = {
 			store: wpslLabels.startPoint
@@ -127,8 +137,13 @@ function checkMobileUserAgent() {
 	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test( navigator.userAgent );	
 }
 
-/* Check if Geolocation detection is supported. If there is an error / timeout with determining the users 
+/* Check if Geolocation detection is supported. 
+ * 
+ * If there is an error / timeout with determining the users 
  * location we use the 'start point' value from the settings as the start location through the showStores function. 
+ *
+ * @since 1.0
+ * @returns {void}
  */
 function checkGeolocation() {
 	if ( navigator.geolocation ) {
@@ -152,7 +167,18 @@ function checkGeolocation() {
 	}
 };
 
+/* Check if Geolocation detection is supported. 
+ * 
+ * If there is an error / timeout determining the users location,
+ * then we use the 'start point' value from the settings as the start location through the showStores function. 
+ *
+ * @since 1.0
+ * @param {object} position The latlng coordinates
+ * @param {boolean} resetMap Whether we should reset the map or not
+ * @returns {void}
+ */
 function handleGeolocationQuery( position, resetMap ) {  
+
 	if ( typeof( position ) === "undefined" ) {
 		showStores();
 	 } else {
@@ -176,7 +202,7 @@ $( "#wpsl-search-btn" ).on( "click", function() {
 	$( "#wpsl-search-input" ).removeClass();
 	
 	if ( !$( "#wpsl-search-input" ).val() ) {
-		$( "#wpsl-search-input" ).addClass( 'wpsl-error' ).focus();
+		$( "#wpsl-search-input" ).addClass( "wpsl-error" ).focus();
 	} else {
 		$( "#wpsl-result-list ul" ).empty();
 		$( "#wpsl-stores" ).show();
@@ -189,7 +215,7 @@ $( "#wpsl-search-btn" ).on( "click", function() {
 	}
 });
 
-/* Reset the map */
+/* Handle clicks on the "Reset" button */
 $( "#wpsl-reset-map" ).on( "click", function() {
 	var keepStartMarker = false,
 		resetMap = true;
@@ -204,7 +230,7 @@ $( "#wpsl-reset-map" ).on( "click", function() {
 	/* Check if the latlng or zoom has changed since pageload, if so there is something to reset */
 	if ( ( ( ( map.getCenter().lat() !== mapDefaults.centerLatlng.lat() ) || ( map.getCenter().lng() !== mapDefaults.centerLatlng.lng() ) || ( map.getZoom() !== mapDefaults.zoomLevel ) ) ) ) {
 		deleteOverlays( keepStartMarker );
-		$( "#wpsl-search-input" ).val('').removeClass();
+		$( "#wpsl-search-input" ).val("").removeClass();
 		
 		/* If marker clusters exist, remove them from the map */
 		if ( markerClusterer ) {
@@ -224,19 +250,28 @@ $( "#wpsl-reset-map" ).on( "click", function() {
 		}		
 	}
 	
+	/* Make sure the stores are shown and the direction details are hidden  */
 	$( "#wpsl-stores" ).show();
     $( "#wpsl-direction-details" ).hide();
 });
 
-/* Remove the start marker from the map and empty the var */
+/* Remove the start marker from the map
+ *
+ * @since 1.2.12
+ * @returns {void}
+ */
 function deleteStartMarker() {
-	if ( ( typeof( startMarkerData ) !== "undefined" )  && ( startMarkerData !== "" ) ) {
+	if ( ( typeof( startMarkerData ) !== "undefined" ) && ( startMarkerData !== "" ) ) {
 		startMarkerData.setMap( null );
-		startMarkerData = '';
+		startMarkerData = "";
 	}
 }
 
-/* Reset the dropdown values after the "reset" button is triggerd */
+/* Reset the dropdown values after the "reset" button is triggerd
+ * 
+ * @since 1.1
+ * @returns {void}
+ */
 function resetDropdowns() {
 	var i, arrayLength,
 		defaultValues = [wpslSettings.searchRadius + ' ' + wpslSettings.distanceUnit, wpslSettings.maxResults],
@@ -248,7 +283,7 @@ function resetDropdowns() {
 
 		$( "#" + dropdowns[i] + " li" ).each( function () {
 			if ( $( this ).text() === defaultValues[i] ) {
-				$( this ).addClass('active');
+				$( this ).addClass( "active" );
 			}
 		});
 	}	
@@ -286,9 +321,15 @@ $( "#wpsl-result-list" ).on( "click", ".wpsl-back", function() {
     return false;
 });
 
+/* Show the driving directions
+ * 
+ * @since 1.1
+ * @param {object} e The clicked elemennt
+ * @returns {void}
+ */
 function renderDirections( e ) {
     var i, start, end, len, storeId;
-    
+
     /* 
     The storeId is placed on the li in the results list, 
     but in the marker it will be on the wrapper div. So we check which one we need to target.
@@ -341,9 +382,15 @@ if ( wpslSettings.markerBounce == 1 ) {
     });
 }
 
-/* Let a single marker bounce */
+/* Let a single marker bounce
+ * 
+ * @since 1.0
+ * @param {number} storeId The storeId of the marker that we need to bounce on the map
+ * @param {string} status Indicates whether we should stop or start the bouncing
+ * @returns {void}
+ */
 function letsBounce( storeId, status ) {
-    var i, len, animation = '';
+    var i, len, animation = "";
 
     if ( status == "start" ) {
 		animation = google.maps.Animation.BOUNCE		
@@ -360,13 +407,19 @@ function letsBounce( storeId, status ) {
     }	
 }
 
-/* Show the directions on the map */
+/* Calculate the route from the start to the end
+ * 
+ * @since 1.0
+ * @param {object} start The latlng from the start point
+ * @param {object} end The latlng from the end point
+ * @returns {void}
+ */
 function calcRoute( start, end ) {
     var legs, len, step, index, direction, i, j, distanceUnit, directionOffset,
 		directionStops = "",    
 		request = {};
 		
-	if ( wpslSettings.distanceUnit == 'km' ) {
+	if ( wpslSettings.distanceUnit == "km" ) {
 		distanceUnit = google.maps.UnitSystem.METRIC
 	} else {
 		distanceUnit = google.maps.UnitSystem.IMPERIAL
@@ -430,7 +483,11 @@ function calcRoute( start, end ) {
     });
 }
 
-/* Geocode the user input */ 
+/* Geocode the user input
+ * 
+ * @since 1.0
+ * @returns {void}
+ */
 function codeAddress() {
     var latLng, 
 		autoLoad = false,
@@ -450,13 +507,18 @@ function codeAddress() {
 		} else {
 			geocodeErrors( status );
 		}
-    }
-)};
+    });
+}
 
-/* Geocode the user input and set the returned zipcode in the input field */ 
+/* Geocode the user input and set the returned zipcode in the input field
+ * 
+ * @since 1.0
+ * @param {object} latlng The coordinates of the location that should be reverse geocoded
+ * @returns {void}
+ */
 function reverseGeocode( latLng ) {
     var zipCode;
-		
+
     geocoder.geocode( {'latLng': latLng}, function( response, status ) {
 		if ( status == google.maps.GeocoderStatus.OK ) {
 			zipCode = filterApiResponse( response );	
@@ -470,7 +532,12 @@ function reverseGeocode( latLng ) {
 	});
 }
 
-/* Filter out the zipcode from the response */
+/* Filter out the zipcode from the response
+ * 
+ * @since 1.0
+ * @param {object} response The complete Google API response
+ * @returns {string} zipcode The zipcode
+ */
 function filterApiResponse( response ) {
     var zipcode, responseType, i,
 		addressLength = response[0].address_components.length;
@@ -488,8 +555,16 @@ function filterApiResponse( response ) {
     return zipcode;
 }
 
+/* Call the function to make the ajax request. But if we need to show the driving directions
+ * on maps.google.com itself, we first need to geocode the start latlng into a formatted address.
+ * 
+ * @since 1.0
+ * @param {object} startLatLng The latlng used as the starting point
+ * @param {boolean} resetMap Whether we should reset the map or not
+ * @param {string} autoLoad Check if we need to autoload all the stores
+ * @returns {void}
+ */
 function findStoreLocations( startLatLng, resetMap, autoLoad ) {		
-	
 	/* Check if we need to open a new window and show the route on the Google Maps site itself. */
 	if ( wpslSettings.directionRedirect == 1 ) {
 		findFormattedAddress( startLatLng, function() {
@@ -500,7 +575,12 @@ function findStoreLocations( startLatLng, resetMap, autoLoad ) {
 	}
 }
 
-/* The formatted address is used to build the url for the driving direction and send the user to maps.google.com */
+/* Convert the latlng into a formatted address
+ * 
+ * @since 1.0
+ * @param {object} latlng The latlng to geocode
+ * @returns {void}
+ */
 function findFormattedAddress( latLng, callback ) {
 	geocoder.geocode( {'latLng': latLng}, function( response, status ) {
 		if ( status == google.maps.GeocoderStatus.OK ) {
@@ -512,6 +592,14 @@ function findFormattedAddress( latLng, callback ) {
 	});
 }
 
+/* Make the Ajax request to load the store data
+ * 
+ * @since 1.2
+ * @param {object} startLatLng The latlng used as the starting point
+ * @param {boolean} resetMap Whether we should reset the map or not
+ * @param {string} autoLoad Check if we need to autoload all the stores
+ * @returns {void}
+ */
 function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 	var latLng,
 		infoWindowData = {},
@@ -655,7 +743,16 @@ function checkMarkerClusters() {
 	}
 }
 
-/* Add a new marker to the map based on the provided location (latlng) */
+/**
+ * Add a new marker to the map based on the provided location (latlng)
+ * 
+ * @since 1.0
+ * @param {object} latLng
+ * @param {number} storeId
+ * @param {object} infoWindowData
+ * @param {boolean} draggable
+ * @return {void}
+ */
 function addMarker( latLng, storeId, infoWindowData, draggable ) {
 	var markerPath, mapIcon, marker, 
 		keepStartMarker = true;
@@ -791,7 +888,7 @@ function activateStreetView( marker ) {
  * info at tijmensmit.com
  * 
  * @since 1.2.20
- * @param {object} marker The current marker
+ * @param {object} panorama The streetview object
  * @returns {void}
  */
 function StreetViewListener( panorama ) {
@@ -824,7 +921,15 @@ function checkStreetViewStatus( latLng, callback ) {
 	});
 }
 
-/* Create the data for the infowindows on Google Maps */
+/**
+ * Create the data for the infowindows on Google Maps
+ * 
+ * @since 1.0
+ * @param {object} infoWindowData The data that is shown in the infowindow (address, url, phone etc)
+ * @param {number} storeId The ID of the store
+ * @param {boolean} streetViewAvailable Indicates whether or not we should show the streetview link
+ * @returns {string} windowContent The html content that is placed in the infowindow
+ */
 function createInfoWindowHtml( infoWindowData, storeId, streetViewAvailable ) {
     var storeHeader, url, 
 		address2 = "",
@@ -925,6 +1030,13 @@ function formatClickablePhoneNumber( phoneNumber ) {
 	return phoneNumber.replace( /(-| |\(|\)|\.|)/g, '' );	
 }
 
+/**
+ * Create the html for the more info data
+ * 
+ * @since 1.2.12
+ * @param {object} storeData The store details shown in the more info section
+ * @returns {string} moreInfoContent The html that is used to show the more info content
+ */
 function createMoreInfoListing( storeData ) {
 	var newWindow = "",
 		moreInfoContent = "<div id='wpsl-id-" + storeData.id + "' class='wpsl-more-info-listings'>";
@@ -953,7 +1065,7 @@ function createMoreInfoListing( storeData ) {
 			newWindow = "target='_blank'";
 		}
 		
-		moreInfoContent += "<span><strong>Url</strong>: <a " + newWindow + " href=" + storeData.url + ">" + storeData.url + "</a></span>";
+		moreInfoContent += "<span><strong>Url</strong>: <a " + newWindow + " href='" + storeData.url + "'>" + storeData.url + "</a></span>";
 	}
 	
 	moreInfoContent += "</p>";
@@ -1009,6 +1121,14 @@ function rfc3986EncodeURIComponent( str ) {
     return encodeURIComponent( str ).replace( /[!'()*]/g, escape );  
 }
 
+/**
+ * Create the html for the <li> elem in the store listing
+ * 
+ * @since 1.0
+ * @param {object} response The store details shown in the more info section
+ * @param {object} url The directions url
+ * @returns {string} html The html with the store details
+ */
 function storeHtml( response, url ) {
 	var html = "", 
 		moreInfoData,
@@ -1027,68 +1147,73 @@ function storeHtml( response, url ) {
 		country = response.country,
 		distance = parseFloat( response.distance ).toFixed(1) + " " + wpslSettings.distanceUnit;
 		
-		if ( ( typeof( thumb ) !== "undefined" ) && ( thumb !== "" ) ) {
-			storeImg = "<img class='wpsl-store-thumb' src='" + thumb + "' width='48' height='48'  alt='" + store + "' />";
-		}
-		
-		/* Check if we need to create an url that sends the user to maps.google.com for driving directions */
-		if ( wpslSettings.directionRedirect == 1 ) {			
-			url = createDirectionUrl( address, city, zip, country );
-		}
-		
-		/* Check if we need to show the 'more info' link in the store listings */
-		if ( wpslSettings.moreInfo == 1 ) {	
-			
-		   /* If we show the store listings under the map, we do want to jump to the 
-			* top of the map to focus on the opened infowindow 
-			*/
-			if ( ( wpslSettings.templateId == 1 ) && ( wpslSettings.moreInfoLocation == 'info window' ) ) {
-				moreInfoUrl = '#wpsl-search-wrap';
-			}
-			
-			/* Do we need to show the 'more info' data under the store details, 
-			 * or should we only add a link which will trigger the infowindow? 
-			 */
-			if ( wpslSettings.moreInfoLocation == "store listings" ) {
-				
-				/* Only create the 'more info' link if there is data to show */
-				if ( ( ( typeof( response.description ) !== "undefined" ) && ( response.description !== "" ) ) ||
-					 ( ( typeof( response.phone ) !== "undefined" ) && ( response.phone !== "" ) ) ||
-					 ( ( typeof( response.fax ) !== "undefined" ) && ( response.fax !== "" ) ) ||
-					 ( ( typeof( response.email ) !== "undefined" ) && ( response.email !== "" ) ) ||
-					 ( ( typeof( response.hours ) !== "undefined" ) && ( response.hours !== "" ) ) ) {
-						moreInfoData = createMoreInfoListing( response );
-						moreInfo = "<p><a class='wpsl-store-details wpsl-store-listing' href=" + moreInfoUrl + "wpsl-id-" + id + ">" + wpslLabels.moreInfo + "</a>" + moreInfoData + "</p>";
-				}
-			} else {
-				moreInfo = "<p><a class='wpsl-store-details' href=" + moreInfoUrl + ">" + wpslLabels.moreInfo + "</a></p>";
-			}
-		}
-		
-		/* Check if we need to make the store name clickable */
-		if ( wpslSettings.storeUrl == 1) {
-			if ( ( typeof( response.url ) !== "undefined" ) && ( response.url !== "" ) ) {
-				
-				/* Do we need to open the url in a new window? */
-				if ( wpslSettings.newWindow == 1 ) {
-					storeUrlTarget = "target='_blank'";
-				}
-				
-				store = "<a " + storeUrlTarget + " href=" + response.url + ">" + store + "</a>";
-			}
-		}
-		
-		/* If we have a second address line, we add it */
-		if ( ( typeof( response.address2 ) !== "undefined" ) && ( response.address2 !== "" ) ) {
-			address2 = "<span class='wpsl-street'>" + response.address2 + "</span>";
+	if ( ( typeof( thumb ) !== "undefined" ) && ( thumb !== "" ) ) {
+		storeImg = "<img class='wpsl-store-thumb' src='" + thumb + "' width='48' height='48'  alt='" + store + "' />";
+	}
+
+	/* Check if we need to create an url that sends the user to maps.google.com for driving directions */
+	if ( wpslSettings.directionRedirect == 1 ) {			
+		url = createDirectionUrl( address, city, zip, country );
+	}
+
+	/* Check if we need to show the 'more info' link in the store listings */
+	if ( wpslSettings.moreInfo == 1 ) {	
+
+	   /* If we show the store listings under the map, we do want to jump to the 
+		* top of the map to focus on the opened infowindow 
+		*/
+		if ( ( wpslSettings.templateId == 1 ) && ( wpslSettings.moreInfoLocation == 'info window' ) ) {
+			moreInfoUrl = '#wpsl-search-wrap';
 		}
 
-		html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + address + "</span>" + address2 + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p>" + moreInfo + "</div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
+		/* Do we need to show the 'more info' data under the store details, 
+		 * or should we only add a link which will trigger the infowindow? 
+		 */
+		if ( wpslSettings.moreInfoLocation == "store listings" ) {
+
+			/* Only create the 'more info' link if there is data to show */
+			if ( ( ( typeof( response.description ) !== "undefined" ) && ( response.description !== "" ) ) ||
+				 ( ( typeof( response.phone ) !== "undefined" ) && ( response.phone !== "" ) ) ||
+				 ( ( typeof( response.fax ) !== "undefined" ) && ( response.fax !== "" ) ) ||
+				 ( ( typeof( response.email ) !== "undefined" ) && ( response.email !== "" ) ) ||
+				 ( ( typeof( response.hours ) !== "undefined" ) && ( response.hours !== "" ) ) ) {
+					moreInfoData = createMoreInfoListing( response );
+					moreInfo = "<p><a class='wpsl-store-details wpsl-store-listing' href=" + moreInfoUrl + "wpsl-id-" + id + ">" + wpslLabels.moreInfo + "</a>" + moreInfoData + "</p>";
+			}
+		} else {
+			moreInfo = "<p><a class='wpsl-store-details' href=" + moreInfoUrl + ">" + wpslLabels.moreInfo + "</a></p>";
+		}
+	}
+
+	/* Check if we need to make the store name clickable */
+	if ( wpslSettings.storeUrl == 1) {
+		if ( ( typeof( response.url ) !== "undefined" ) && ( response.url !== "" ) ) {
+
+			/* Do we need to open the url in a new window? */
+			if ( wpslSettings.newWindow == 1 ) {
+				storeUrlTarget = "target='_blank'";
+			}
+
+			store = "<a " + storeUrlTarget + " href='" + response.url + "'>" + store + "</a>";
+		}
+	}
+
+	/* If we have a second address line, we add it */
+	if ( ( typeof( response.address2 ) !== "undefined" ) && ( response.address2 !== "" ) ) {
+		address2 = "<span class='wpsl-street'>" + response.address2 + "</span>";
+	}
+
+	html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + address + "</span>" + address2 + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p>" + moreInfo + "</div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
 
 	return html;
 }
 
-/* Zoom the map so that all markers fit in the window */
+/**
+ * Zoom the map so that all markers fit in the window 
+ * 
+ * @since 1.0
+ * @returns {void}
+ */
 function fitBounds() {
     var i, markerLen, 
 		maxZoom = 12,
@@ -1108,7 +1233,13 @@ function fitBounds() {
     map.fitBounds( bounds );
 }
 
-/* Remove all existing markers and route lines from the map */
+/**
+ * Remove all existing markers and route lines from the map
+ * 
+ * @since 1.0
+ * @param {boolean} keepStartMarker Whether or not to keep the start marker while removing all the other markers from the map
+ * @returns {void}
+ */
 function deleteOverlays( keepStartMarker ) {
 	var markerLen, i;
     directionsDisplay.setMap( null );

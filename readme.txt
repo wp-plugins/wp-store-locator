@@ -3,7 +3,7 @@ Contributors: tijmensmit
 Tags: google maps, store locator, business locations, geocoding, stores, geo
 Requires at least: 3.5
 Tested up to: 3.9.1
-Stable tag: 1.2.21
+Stable tag: 1.2.22
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -77,6 +77,12 @@ If you find a plugin or theme that causes a conflict, please report it on the [s
 5. Overview from the current stores
 
 == Changelog ==
+
+= 1.2.22 =
+* Fixed compatibility issues with the Google Maps field in the Advanced Custom Fields plugin
+* Fixed the store urls in the store listings sometimes breaking
+* Removed the requirement for a zipcode on the add/edit store page
+* Improved the documentation in the js files
 
 = 1.2.21 =
 * Fixed an js error breaking the store locator
