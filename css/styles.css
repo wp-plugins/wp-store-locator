@@ -245,6 +245,29 @@ div elements, we disable it to prevent it from messing up the map
     float:left;
 }
 
+#wpsl-search-wrap .wpsl-dropdown div {
+    position: absolute;
+    float: none;
+    margin: -1px 0 0 0;
+    top: 100%;
+    left: -1px;
+    right: -1px;
+    border: 1px solid #ccc;
+    background: #fff;    
+    border-top: 1px solid #eee;
+    border-radius: 0 0 3px 3px;
+    opacity: 0;
+    overflow: hidden;
+    -webkit-transition: all 150ms ease-in-out;
+    -moz-transition: all 150ms ease-in-out;
+    -ms-transition: all 150ms ease-in-out;
+    transition: all 150ms ease-in-out;
+}
+
+#wpsl-search-wrap .wpsl-dropdown.wpsl-active div {
+    opacity: 1;
+}
+
 #wpsl-search-wrap .wpsl-input label {
     margin-right:0;
 }
@@ -320,26 +343,7 @@ div elements, we disable it to prevent it from messing up the map
     margin-right:0;
 }
 
-/* --- EASYDROPDOWN DEFAULT THEME --- */
-.wpsl-dropdown,
-.wpsl-dropdown div,
-.wpsl-dropdown li,
-.wpsl-dropdown div::after{
-    -webkit-transition: all 150ms ease-in-out;
-    -moz-transition: all 150ms ease-in-out;
-    -ms-transition: all 150ms ease-in-out;
-    transition: all 150ms ease-in-out;
-}
-
-.wpsl-dropdown .selected::after,
-.wpsl-dropdown.scrollable div::after{
-    -webkit-pointer-events: none;
-    -moz-pointer-events: none;
-    -ms-pointer-events: none;
-    pointer-events: none;
-}
-
-/* WRAPPER */
+/* --- dropdowns --- */
 .wpsl-dropdown {
     position: relative;
     width: 90px;
@@ -351,27 +355,37 @@ div elements, we disable it to prevent it from messing up the map
     -moz-user-select: none;
     user-select: none;
     margin-right: 0 !important;
-}
-
-.wpsl-no-results .wpsl-dropdown {
-    width: 114px;
-}
-
-.wpsl-dropdown.open{
     z-index: 2;
 }
-#wpsl-search-input:hover,
-.wpsl-dropdown:hover{
-    box-shadow: 0 0 5px rgba(0,0,0,.15);
-}
-wpsl-search-input.focus,
-.wpsl-dropdown.focus{
-    box-shadow: 0 0 5px rgba(51,102,248,.4);
+
+.wpsl-dropdown ul {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    overflow: hidden;
 }
 
-/* CARAT */
-.wpsl-dropdown .carat{
+.wpsl-dropdown:hover {
+    box-shadow: 0 0 5px rgba( 0, 0, 0, 0.15 );	
+}
+
+.wpsl-dropdown .wpsl-selected-item,
+.wpsl-dropdown li {
+    position: relative;
+    display: block;
+    line-height: 1;
+    color: #000;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.wpsl-selected-item:after {
     position: absolute;
+    content: "";
     right: 12px;
     top: 50%;
     margin-top: -4px;
@@ -379,148 +393,34 @@ wpsl-search-input.focus,
     border-top: 8px solid #000;
 }
 
-.wpsl-dropdown.open .carat{
+.wpsl-active .wpsl-selected-item:after {
     margin-top: -10px;
-    border-top: 6px solid transparent;
-    border-bottom: 8px solid #000;
+    border: 6px solid transparent;
+    border-bottom: 8px solid #000;	
 }
 
-.wpsl-dropdown.disabled .carat{
-    border-top-color: #999;
-}
-
-/* OLD SELECT (HIDDEN) */
-.wpsl-dropdown .old{
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 0;
-    width: 0;
-    overflow: hidden;
-}
-
-.wpsl-dropdown select{
-    position: absolute;
-    left: 0px;
-    top: 0px;
-}
-
-.wpsl-dropdown.touch .old{
-    width: 100%;
-    height: 100%;
-}
-
-.wpsl-dropdown.touch select{
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-}
-
-/* SELECTED FEEDBACK ITEM */ 
-
-/*select.wpsl-dropdown {display:none;}*/
-#wpsl-search-wrap .wpsl-dropdown div {
-    margin-right: 0;
-}
-.wpsl-dropdown .selected,
-.wpsl-dropdown li{
-    display: block;
-    line-height: 1;
-    color: #000;
-    padding: 9px 12px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.wpsl-dropdown.disabled .selected{
-    color: #999;
-}
-
-.wpsl-dropdown .selected::after{
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 60px;
-    border-radius: 0 2px 2px 0;
-}
-
-/* DROP DOWN WRAPPER */
-.wpsl-dropdown div{
-    position: absolute;
-    height: 0;
-    left: -1px;
-    right: -1px;
-    top: 100%;
-    margin-top: -1px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-top: 1px solid #eee;
-    border-radius: 0 0 3px 3px;
-    overflow: hidden;
-    opacity: 0;
-}
-
-/* Height is adjusted by JS on open */
-
-.wpsl-dropdown.open div{
-    opacity: 1;
-    z-index: 2;
-}
-
-/* FADE OVERLAY FOR SCROLLING LISTS */
-
-.wpsl-dropdown.scrollable div::after{
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 50px;
-    box-shadow: inset 0 -50px 30px -35px #fff;
-}
-
-.wpsl-dropdown.scrollable.bottom div::after{
-    opacity: 0;
-}
-
-/* DROP DOWN LIST */
-
-.wpsl-dropdown ul{
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 100%;
-    list-style: none;
-    overflow: hidden;
-    padding:0;
-    margin:0;
-}
-
-.wpsl-dropdown.scrollable.open ul{
-    overflow-y: auto;
-}
-
-/* DROP DOWN LIST ITEMS */
-#wpsl-wrap .wpsl-dropdown li{
-    list-style: none;
-    padding: 8px 12px !important;
-    margin:0 !important;
-}
-
-/* .focus class is also added on hover */
-.wpsl-dropdown li.focus{
+.wpsl-dropdown li:hover {
     background: #f8f9f8;
     position: relative;
     z-index: 3;
     color: #000;
 }
 
-#wpsl-wrap .wpsl-dropdown li.active{
-    font-weight: 700;
-    background:none !important;
+.wpsl-dropdown .wpsl-selected-item,
+.wpsl-dropdown li,
+.wpsl-selected-item {
+    list-style: none;
+    padding: 9px 12px !important;
+    margin:0 !important;   
+}
+
+.wpsl-selected-dropdown {
+    font-weight: bold;	
+}
+
+#wpsl-radius, #wpsl-results {
+    float: left;
+    margin-right: 15px;	
 }
 
 .clearfix:before,  
@@ -539,8 +439,6 @@ wpsl-search-input.focus,
 .wpsl-input, .wpsl-select-wrap {
     margin-bottom:10px;
 }
-
-/*  */
 
 @media (max-width: 825px) {
     #wpsl-search-input {

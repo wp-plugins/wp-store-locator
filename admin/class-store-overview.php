@@ -308,13 +308,13 @@ class WPSL_Store_Overview extends WP_List_Table {
                             );
         } else {
             /* Order params */
-            $orderby   = !empty ( $_GET["orderby"] ) ? mysql_real_escape_string ( $_GET["orderby"] ) : 'store';
-            $order     = !empty ( $_GET["order"] ) ? mysql_real_escape_string ( $_GET["order"] ) : 'ASC';
+            $orderby   = !empty ( $_GET["orderby"] ) ? esc_sql( $_GET["orderby"] ) : 'store';
+            $order     = !empty ( $_GET["order"] ) ? esc_sql( $_GET["order"] ) : 'ASC';
             $order_sql = $orderby.' '.$order; 
 
             /* Pagination parameters */
             $total_items = $wpdb->get_var( "SELECT COUNT(*) AS count FROM $wpdb->wpsl_stores" );
-            $paged       = !empty ( $_GET["paged"] ) ? mysql_real_escape_string ( $_GET["paged"] ) : '';
+            $paged       = !empty ( $_GET["paged"] ) ? esc_sql( $_GET["paged"] ) : '';
             
             if ( empty( $paged ) || !is_numeric( $paged ) || $paged <= 0 ) { 
                 $paged = 1; 

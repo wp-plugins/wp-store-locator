@@ -38,7 +38,7 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
             $this->add_frontend_scripts();
 
             $template_list = $this->get_templates();
-            $output        = require_once( $template_list[ absint( $this->settings['template_id'] ) ]['path'] );    
+            $output        = include( $template_list[ absint( $this->settings['template_id'] ) ]['path'] );    
             
             return $output;
 		}
@@ -171,7 +171,6 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
          */
 		public function add_frontend_scripts() {
 			wp_enqueue_style( 'wpsl-css', WPSL_URL . 'css/styles.css', false );
-            wp_enqueue_script( 'wpsl-dropdown', WPSL_URL.'js/jquery.easydropdown.min.js', array( 'jquery' ) ); //not minified version is in the js folder
             wp_enqueue_script( 'wpsl-gmap', ( "//maps.google.com/maps/api/js?sensor=false".$this->get_gmap_api_attributes() ),'' ,'' ,true );
             
             if ( $this->settings['marker_clusters'] ) {  
@@ -220,7 +219,6 @@ if ( !class_exists( 'WPSL_Frontend' ) ) {
                 $settings['clusterSize'] = $this->settings['cluster_size'];
             }
             
-            /* The __( string, 'wpsl' ) makes the labels accessible in wpml */
 			$labels = array( 
 				'preloader'         => stripslashes( __( $this->settings['preloader_label'], 'wpsl' ) ),
 				'noResults'         => stripslashes( __( $this->settings['no_results_label'], 'wpsl' ) ),

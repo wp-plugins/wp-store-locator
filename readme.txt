@@ -3,7 +3,7 @@ Contributors: tijmensmit
 Tags: google maps, store locator, business locations, geocoding, stores, geo
 Requires at least: 3.5
 Tested up to: 4.1
-Stable tag: 1.2.23
+Stable tag: 1.2.24
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -77,6 +77,14 @@ If you find a plugin or theme that causes a conflict, please report it on the [s
 5. Overview from the current stores
 
 == Changelog ==
+
+= 1.2.24 =
+* Fixed: Clicking the marker would no longer open the info window after a Google Maps API update. This only happened if street view was enabled.
+* Fixed: A fatal error on some installations caused by the usage of mysql_real_escape_string, it is replaced with esc_sql.
+* Fixed: A problem where some themes would just show "1" instead of the shortcode output.
+* Fixed: The "dismiss" link not working in the notice that reminds users to define a start point.
+* Fixed: A missing html tag that broken the store listing in IE7/8.
+* Changed: Replaced the non-GPL compatible dropdown script.
 
 = 1.2.23 =
 * Fixed the geocoding request for the map preview on the add/edit page not including the zipcode when it's present, which can misplace the marker

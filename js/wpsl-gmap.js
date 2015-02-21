@@ -8,8 +8,7 @@ var geocoder, map, infoWindow, directionsDisplay, directionsService, geolocation
 	startMarkerData,
 	startAddress,
 	startLatLng,
-	autoLoad = wpslSettings.autoLoad,
-	$selects = $( "#wpsl-search-wrap select" );
+	autoLoad = wpslSettings.autoLoad;
 
 /**
  * Initialize the map with the correct settings
@@ -87,11 +86,8 @@ function initializeGmap() {
 	 * We do this because several people have reported issues with it on iOS and Android devices. So on mobile
 	 * devices the dropdowns will be styled according to the browser styles on that device.
 	 */
-	if ( !checkMobileUserAgent() ) {
-		$selects.easyDropDown({
-			cutOff: 10,
-			wrapperClass: "wpsl-dropdown"
-		});
+	if ( !checkMobileUserAgent() && $( ".wpsl-dropdown" ).length ) {
+		createDropdowns();	
 	} else {
 		$( "#wpsl-search-wrap select").show();
 		$( "#wpsl-wrap" ).addClass( "wpsl-mobile" );
@@ -626,8 +622,8 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 			ajaxData.max_results = $( "#wpsl-results .wpsl-dropdown" ).val();
 			ajaxData.radius 	 = $( "#wpsl-radius .wpsl-dropdown" ).val();
 		} else {
-			ajaxData.max_results = parseInt( $( "#wpsl-results .wpsl-dropdown .selected" ).text() );
-			ajaxData.radius 	 = parseInt( $( "#wpsl-radius .wpsl-dropdown .selected" ).text() );
+			ajaxData.max_results = parseInt( $( "#wpsl-results .wpsl-selected-dropdown" ).text() );
+			ajaxData.radius 	 = parseInt( $( "#wpsl-radius .wpsl-selected-dropdown" ).text() );
 		}
 	}
 
@@ -799,8 +795,7 @@ function addMarker( latLng, storeId, infoWindowData, draggable ) {
 		} else {
 			setInfoWindowContent( marker, wpslLabels.startPoint );
 		}	
-				
-		google.maps.event.clearListeners( infoWindow );
+
 		google.maps.event.addListener( infoWindow, "domready", function() {	
 			infoWindowActions( marker, latLng );
 		});
@@ -1203,7 +1198,7 @@ function storeHtml( response, url ) {
 		address2 = "<span class='wpsl-street'>" + response.address2 + "</span>";
 	}
 
-	html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + address + "</span>" + address2 + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</p>" + moreInfo + "</div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
+	html = "<li data-store-id='" + id + "'><div><p>" + storeImg + "<strong>" + store + "</strong><span class='wpsl-street'>" + address + "</span>" + address2 + city + " " + state + " " + zip + "<span class='wpsl-country'>" + country + "</span></p>" + moreInfo + "</div>" + distance + "<a class='wpsl-directions' " + url.target + " href='" + url.src + "'>" + wpslLabels.directions + "</a></li>";
 
 	return html;
 }
@@ -1362,6 +1357,95 @@ $( "#wpsl-stores" ).on( "click", ".wpsl-store-details", function() {
 		return false;
 	}
 });
+
+/**
+ * Create the dropdown filters
+ * 
+ * Inspired by https://github.com/patrickkunka/easydropdown
+ * 
+ * @since 1.2.24
+ * @returns void
+ */
+function createDropdowns() {
+		
+	$( ".wpsl-dropdown" ).each( function( index ) {
+		var	active, maxHeight, $this = $( this );
+		
+		$this.$dropdownWrap = $this.wrap( "<div class='wpsl-dropdown'></div>" ).parent();	
+		$this.$selectedVal  = $this.val();							
+		$this.$dropdownElem = $( "<div><ul/></div>" ).appendTo( $this.$dropdownWrap );
+		$this.$dropdown     = $this.$dropdownElem.find( "ul" );
+		$this.$options 	  	= $this.$dropdownWrap.find( "option" );
+		
+		/* Hide the original <select> and remove the css class */
+		$this.hide().removeClass( "wpsl-dropdown" );
+		
+		/* Loop over the options from the <select> and move them to a <li> instead */
+		$.each( $this.$options, function() {
+			if ( $( this ).val() == $this.$selectedVal ) {
+				active = 'class="wpsl-selected-dropdown"';
+			} else {
+				active = '';
+			}
+			
+			$this.$dropdown.append( "<li " + active + ">" + $( this ).text() + "</li>" );
+		});	
+		
+		$this.$dropdownElem.before( "<span class='wpsl-selected-item'>" + $this.find( ":selected" ).text() + "</span>" );
+		$this.$dropdownItem = $this.$dropdownElem.find( "li" );
+		
+		/* Listen for clicks on the 'wpsl-dropdown' div */
+		$this.$dropdownWrap.on( "click", function( e ) {
+			closeDropdowns();
+			
+			$( this ).toggleClass( "wpsl-active" );
+			maxHeight = 0;
+			
+			/* Either calculate the correct height for the <ul> or set it to 0 to hide it */
+			if ( $( this ).hasClass( "wpsl-active" ) ) {
+				$this.$dropdownItem.each( function( index ) {
+					maxHeight += $( this ).outerHeight();
+				});
+				
+				$this.$dropdownElem.css( "height", maxHeight + 2 + "px" );
+			} else {
+				$this.$dropdownElem.css( "height", 0 );
+			}
+		
+			e.stopPropagation();
+		});	
+		
+		/* Listen for clicks on the individual dropdown items */
+		$this.$dropdownItem.on( "click", function( e ) {
+			
+			/* Set the correct value as the selected item */
+			$this.$dropdownWrap.find( $( ".wpsl-selected-item" ) ).html( $( this ).text() );	
+			
+			/* Apply the class to the correct item to make it bold */
+			$this.$dropdownItem.removeClass( "wpsl-selected-dropdown" );
+			$( this ).addClass( "wpsl-selected-dropdown" );
+			
+			closeDropdowns();
+			
+			e.stopPropagation();
+		});
+	});	
+	
+	$( document ).click( function() {
+		closeDropdowns();
+	});
+}
+
+/**
+ * Close all the dropdowns
+ * 
+ * @since 1.2.24
+ * @returns void
+ */
+function closeDropdowns() {
+	$( ".wpsl-dropdown" ).removeClass( "wpsl-active" );
+	$( ".wpsl-dropdown div" ).css( "height", 0 );	
+}
 
 if ( $( "#wpsl-gmap" ).length ) {
     google.maps.event.addDomListener( window, "load", initializeGmap );
