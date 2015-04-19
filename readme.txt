@@ -2,8 +2,8 @@
 Contributors: tijmensmit
 Tags: google maps, store locator, business locations, geocoding, stores, geo
 Requires at least: 3.5
-Tested up to: 4.1
-Stable tag: 1.2.24
+Tested up to: 4.2
+Stable tag: 1.2.25
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -77,6 +77,10 @@ If you find a plugin or theme that causes a conflict, please report it on the [s
 5. Overview from the current stores
 
 == Changelog ==
+
+= 1.2.25 =
+* Fixed: The store search breaking after the reset button was clicked, via [Drew75](https://wordpress.org/support/profile/drew75)
+* Fixed: Two PHP notices.
 
 = 1.2.24 =
 * Fixed: Clicking the marker would no longer open the info window after a Google Maps API update. This only happened if street view was enabled.

@@ -390,7 +390,7 @@ class WPSL_Store_Overview extends WP_List_Table {
      * @return void
      */
    function display() {
-        extract( $this->_args );
+        $singular = $this->_args['singular'];
 
         $this->display_tablenav( 'top' );
 	?>

@@ -622,8 +622,8 @@ function makeAjaxRequest( startLatLng, resetMap, autoLoad ) {
 			ajaxData.max_results = $( "#wpsl-results .wpsl-dropdown" ).val();
 			ajaxData.radius 	 = $( "#wpsl-radius .wpsl-dropdown" ).val();
 		} else {
-			ajaxData.max_results = parseInt( $( "#wpsl-results .wpsl-selected-dropdown" ).text() );
-			ajaxData.radius 	 = parseInt( $( "#wpsl-radius .wpsl-selected-dropdown" ).text() );
+			ajaxData.max_results = parseInt( $( "#wpsl-results .wpsl-selected-item" ).text() );
+			ajaxData.radius      = parseInt( $( "#wpsl-radius .wpsl-selected-item" ).text() );
 		}
 	}
 

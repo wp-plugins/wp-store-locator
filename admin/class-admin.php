@@ -634,7 +634,7 @@ if ( !class_exists( 'WPSL_Admin' ) ) {
         * @return void
         */
        public function show_location_warning() {
-           if ( $_GET['page'] !== 'wpsl_settings' ) {
+           if ( isset( $_GET['page'] ) && $_GET['page'] !== 'wpsl_settings' ) {
                echo "<div id='message' class='error'><p><strong>" . sprintf( __( "Before adding the [wpsl] shortcode to a page, please don't forget to define a start point on the %ssettings%s page.", "wpsl" ), "<a href='" . admin_url( 'admin.php?page=wpsl_settings' ) . "'>", "</a>" ) . " <a class='wpsl-dismiss' data-nonce='" . wp_create_nonce( 'wpsl-dismiss' ) . "' href='#'>" . __( "Dismiss", "wpsl" ) . "</a></p></div>";   
            }
         }
