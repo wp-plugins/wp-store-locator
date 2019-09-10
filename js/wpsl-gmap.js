@@ -936,7 +936,7 @@ function createInfoWindowHtml( infoWindowData, storeId, streetViewAvailable ) {
     /* Check if we need to turn the store name into a link or not */
     if ( ( typeof( infoWindowData.url ) !== "undefined" ) && ( infoWindowData.url !== "" ) ) {
 		if ( wpslSettings.newWindow == 1 ) {
-			newWindow = "target='_blank'";
+			newWindow = "target='_blank' rel='noopener noreferrer'";
 		}
 		
 		storeHeader = "<a " + newWindow + " href='" + infoWindowData.url + "'><strong>" + infoWindowData.store + "</strong></a>";
@@ -1057,7 +1057,7 @@ function createMoreInfoListing( storeData ) {
 	
 	if ( ( typeof( storeData.url ) !== "undefined" ) && ( storeData.url !== "" ) ) {
 		if ( wpslSettings.newWindow == 1 ) {
-			newWindow = "target='_blank'";
+			newWindow = "target='_blank' rel='noopener noreferrer'";
 		}
 		
 		moreInfoContent += "<span><strong>Url</strong>: <a " + newWindow + " href='" + storeData.url + "'>" + storeData.url + "</a></span>";
@@ -1097,7 +1097,8 @@ function createDirectionUrl( address, city, zip, country ) {
 
 	url = {
 		src : "https://maps.google.com/maps?saddr=" + rfc3986EncodeURIComponent( startAddress ) + "&daddr=" + rfc3986EncodeURIComponent( destinationAddress ) + "",
-		target : "target='_blank'"
+		target : "target='_blank'",
+		rel : "rel='noopener noreferrer'"
 	};
 
 	return url;
@@ -1186,7 +1187,7 @@ function storeHtml( response, url ) {
 
 			/* Do we need to open the url in a new window? */
 			if ( wpslSettings.newWindow == 1 ) {
-				storeUrlTarget = "target='_blank'";
+				storeUrlTarget = "target='_blank' rel='noopener noreferrer'";
 			}
 
 			store = "<a " + storeUrlTarget + " href='" + response.url + "'>" + store + "</a>";
